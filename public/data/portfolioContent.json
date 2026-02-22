@@ -31,6 +31,16 @@
       "Auth Service — JWT & OAuth2"
     ]
   },
+  "github": {
+    "title": "Github",
+    "description": "Open source contributions and personal repositories. Building in public.",
+    "list": [
+      "github.com/itzz-soorya",
+      "Underwater Portfolio — Three.js",
+      "Backend Microservices — Node.js",
+      "Open Source Contributor"
+    ]
+  },
   "social": {
     "title": "Social",
     "description": "Connect with me across platforms. Always open to collaborations and conversations.",

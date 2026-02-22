@@ -7,7 +7,7 @@ import { SECTIONS } from '../config/SectionPositions'
  * Sections that get ground-bubble activation.
  * Github excluded — handled separately later.
  */
-const ACTIVE_IDS = ['introduction', 'stacks', 'projects', 'social', 'contact']
+const ACTIVE_IDS = ['introduction', 'stacks', 'projects', 'github', 'social', 'contact']
 
 /* ────────────────────────────────────────────────────────────
    GroundBubbleEffect — 2 small natural air bubbles + sand dust

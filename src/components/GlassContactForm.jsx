@@ -2,13 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { SECTIONS } from '../config/SectionPositions'
 
-// Contact section index
 const CONTACT_INDEX = SECTIONS.findIndex(s => s.id === 'contact')
 
 /**
- * GlassContactForm — glass-styled form panel for the Contact section.
- * Rises from the ground like the content box.
- * Fields: Name, Email, Message. Submit → console.log.
+ * FloatingContactForm — no glass panel.
+ * Form fields float in the water with minimal transparent styling.
  */
 export default function GlassContactForm({ activeSection, enabled }) {
   const formRef = useRef()
@@ -19,106 +17,84 @@ export default function GlassContactForm({ activeSection, enabled }) {
 
   const isActive = enabled && activeSection === CONTACT_INDEX
 
-  // Animate in/out — ground rise
   useEffect(() => {
     const el = formRef.current
     if (!el) return
 
     if (isActive) {
-      // Rise from ground to center
       gsap.killTweensOf(el)
-      gsap.set(el, { display: 'block' })
+      gsap.killTweensOf(el.children)
+      gsap.set(el, { display: 'flex' })
 
       gsap.fromTo(el,
-        {
-          xPercent: -50,
-          yPercent: 150,
-          opacity: 0,
-          scale: 0.85,
-        },
-        {
-          xPercent: -50,
-          yPercent: -50,
-          opacity: 1,
-          scale: 1,
-          duration: 1.3,
-          delay: 0.6,
-          ease: 'power3.out',
-        }
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.0, delay: 0.6, ease: 'power2.out' }
+      )
+
+      const children = el.querySelectorAll('.water-title, .water-desc, .water-input, .water-submit, .water-form-success')
+      gsap.fromTo(children,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.7, delay: 0.8, stagger: 0.08, ease: 'power2.out' }
       )
     } else {
       gsap.killTweensOf(el)
       gsap.to(el, {
-        yPercent: 150,
+        y: 25,
         opacity: 0,
-        scale: 0.9,
-        duration: 0.7,
+        duration: 0.4,
         ease: 'power2.in',
         onComplete: () => { el.style.display = 'none' },
       })
-      // Reset submitted state when leaving
       setSubmitted(false)
     }
   }, [isActive])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const data = { name, email, message }
-    console.log('Contact Form Submitted:', data)
+    console.log('Contact Form Submitted:', { name, email, message })
     setSubmitted(true)
-    // Clear form
-    setName('')
-    setEmail('')
-    setMessage('')
-    // Reset after 3s
+    setName(''); setEmail(''); setMessage('')
     setTimeout(() => setSubmitted(false), 3000)
   }
 
+  // Contact is RIGHT side → text on left
   return (
-    <div ref={formRef} className="glass-box glass-form" style={{ display: 'none' }}>
-      <h2 className="glass-box-title">Get In Touch</h2>
-      <p className="glass-box-desc">
-        Have a project idea or want to connect? Drop a message below.
-      </p>
+    <div ref={formRef} className="water-text" style={{ display: 'none', alignItems: 'center', textAlign: 'center' }}>
+      <h2 className="water-title">Get In Touch</h2>
+      <p className="water-desc">Have a project idea or want to connect? Drop a message below.</p>
 
       {submitted ? (
-        <div className="glass-form-success">
-          <span className="glass-form-success-icon">✓</span>
+        <div className="water-form-success">
+          <span className="water-success-icon">✓</span>
           <p>Message sent successfully!</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="glass-form-fields">
-          <div className="glass-form-group">
-            <input
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="glass-input"
-            />
-          </div>
-          <div className="glass-form-group">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="glass-input"
-            />
-          </div>
-          <div className="glass-form-group">
-            <textarea
-              placeholder="Message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              required
-              rows={4}
-              className="glass-input glass-textarea"
-            />
-          </div>
-          <button type="submit" className="glass-submit">
+        <form onSubmit={handleSubmit} className="water-form">
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="water-input"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="water-input"
+          />
+          <textarea
+            placeholder="Message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            required
+            rows={4}
+            className="water-input water-textarea"
+          />
+          <button type="submit" className="water-submit">
             Send Message
           </button>
         </form>

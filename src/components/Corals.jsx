@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useRef, useMemo } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 /* ─────────────────────────── seeded PRNG ─────────────────────────── */
@@ -291,198 +292,75 @@ function RockCoral({ position, scale, colorIdx, rng }) {
   )
 }
 
-/* ── procedural shell nacre texture (matches real shell photo) ────────── */
-function createShellTexture(size = 512, isInner = true) {
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')
-
-  const cx = size / 2, cy = size / 2
-
-  if (isInner) {
-    // Inner nacre — creamy white centre → warm peach → soft pink at edge
-    const grad = ctx.createRadialGradient(cx, cy * 0.6, 0, cx, cy, size * 0.55)
-    grad.addColorStop(0.0, '#FAF4ED')   // near-white centre
-    grad.addColorStop(0.3, '#F5E6D3')   // warm cream 
-    grad.addColorStop(0.55, '#EDCFB8')  // peach
-    grad.addColorStop(0.75, '#E4B89E')  // deeper peach-pink
-    grad.addColorStop(1.0, '#D4A07A')   // golden tan at rim
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, size, size)
-
-    // Iridescent nacre shimmer — subtle rainbow streaks
-    for (let i = 0; i < 18; i++) {
-      const angle = (i / 18) * Math.PI * 2
-      const shimGrad = ctx.createLinearGradient(
-        cx + Math.cos(angle) * 20, cy + Math.sin(angle) * 20,
-        cx + Math.cos(angle) * size * 0.45, cy + Math.sin(angle) * size * 0.45
-      )
-      shimGrad.addColorStop(0, 'rgba(255,240,230,0)')
-      shimGrad.addColorStop(0.3, 'rgba(255,220,210,0.06)')
-      shimGrad.addColorStop(0.5, 'rgba(230,210,240,0.05)')
-      shimGrad.addColorStop(0.7, 'rgba(210,230,240,0.04)')
-      shimGrad.addColorStop(1, 'rgba(240,230,220,0)')
-      ctx.fillStyle = shimGrad
-      ctx.fillRect(0, 0, size, size)
-    }
-
-    // Radial ridge lines from hinge (bottom-centre) — scallop growth lines
-    ctx.strokeStyle = 'rgba(200,160,120,0.12)'
-    for (let i = 0; i < 28; i++) {
-      const a = -Math.PI * 0.15 + (i / 27) * Math.PI * 1.3
-      ctx.beginPath()
-      ctx.moveTo(cx, size)
-      ctx.lineTo(cx + Math.cos(a) * size * 0.7, size - Math.sin(a) * size * 0.9)
-      ctx.lineWidth = 1 + Math.random() * 1.5
-      ctx.stroke()
-    }
-
-    // Concentric growth arcs
-    ctx.strokeStyle = 'rgba(190,150,110,0.07)'
-    for (let r = 60; r < size * 0.55; r += 18 + Math.random() * 14) {
-      ctx.beginPath()
-      ctx.arc(cx, size, r, -Math.PI * 0.85, -Math.PI * 0.15)
-      ctx.lineWidth = 0.8 + Math.random()
-      ctx.stroke()
-    }
-  } else {
-    // Outer shell — warmer golden-tan to amber-brown
-    const grad = ctx.createRadialGradient(cx, cy * 0.6, 0, cx, cy, size * 0.55)
-    grad.addColorStop(0.0, '#D4A97A')
-    grad.addColorStop(0.3, '#C9976A')
-    grad.addColorStop(0.6, '#B8845A')
-    grad.addColorStop(1.0, '#A07050')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, size, size)
-
-    // Stronger radial ridges on outer surface
-    ctx.strokeStyle = 'rgba(120,80,50,0.18)'
-    for (let i = 0; i < 28; i++) {
-      const a = -Math.PI * 0.15 + (i / 27) * Math.PI * 1.3
-      ctx.beginPath()
-      ctx.moveTo(cx, size)
-      ctx.lineTo(cx + Math.cos(a) * size * 0.72, size - Math.sin(a) * size * 0.92)
-      ctx.lineWidth = 1.5 + Math.random() * 2
-      ctx.stroke()
-    }
-
-    // Concentric growth rings (more visible on exterior)
-    ctx.strokeStyle = 'rgba(100,70,40,0.1)'
-    for (let r = 50; r < size * 0.6; r += 14 + Math.random() * 10) {
-      ctx.beginPath()
-      ctx.arc(cx, size, r, -Math.PI * 0.85, -Math.PI * 0.15)
-      ctx.lineWidth = 1 + Math.random() * 1.5
-      ctx.stroke()
-    }
-  }
-
-  const tex = new THREE.CanvasTexture(canvas)
-  tex.colorSpace = THREE.SRGBColorSpace
-  return tex
-}
-
-/* ── pearl iridescence procedural texture ── */
-function createPearlTexture(size = 256) {
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')
-
-  // Base creamy white
-  const grad = ctx.createRadialGradient(size * 0.4, size * 0.35, 0, size * 0.5, size * 0.5, size * 0.5)
-  grad.addColorStop(0.0, '#FFFDF8')
-  grad.addColorStop(0.4, '#F5EDE4')
-  grad.addColorStop(0.7, '#EDE0D4')
-  grad.addColorStop(1.0, '#E0D0C0')
-  ctx.fillStyle = grad
-  ctx.fillRect(0, 0, size, size)
-
-  // Subtle iridescent colour patches
-  const colours = [
-    'rgba(255,220,230,0.08)', 'rgba(220,230,255,0.06)',
-    'rgba(230,255,230,0.05)', 'rgba(255,240,210,0.07)',
-  ]
-  for (let i = 0; i < 12; i++) {
-    const x = Math.random() * size
-    const y = Math.random() * size
-    const r = 30 + Math.random() * 60
-    const g2 = ctx.createRadialGradient(x, y, 0, x, y, r)
-    g2.addColorStop(0, colours[i % colours.length])
-    g2.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = g2
-    ctx.fillRect(0, 0, size, size)
-  }
-
-  const tex = new THREE.CanvasTexture(canvas)
-  tex.colorSpace = THREE.SRGBColorSpace
-  return tex
-}
+/* ─────────────── shell geometry from shell-gleam-studio ─────────────── */
 
 /**
- * Build a scallop shell valve — fan-shaped, cupped, with proper radial ridges.
- * Custom BufferGeometry matching the shape in the reference photo.
+ * Creates one half of the scallop shell (top or bottom valve).
+ * Exact geometry from the shell-gleam-studio project.
  */
-function createScallopValveGeometry(rng, radius = 0.34, segments = 24, rings = 12) {
+function createShellHalf(isTop, detail = 1) {
+  const segments = Math.round(140 * detail)
+  const rings = Math.round(100 * detail)
+  const ridgeCount = 16
+  const fanAngle = Math.PI * 0.85
+  const maxR = 2.2
+
   const positions = []
-  const normals = []
   const uvs = []
   const indices = []
 
-  const fanAngle = Math.PI * 1.15  // slightly wider than semicircle
-  const startAngle = -fanAngle / 2
-
   for (let ri = 0; ri <= rings; ri++) {
-    const rFrac = ri / rings
-    const r = rFrac * radius
-    // Cupping — lift edges, depress centre (creates the bowl shape)
-    const cup = -Math.pow(rFrac, 1.6) * 0.12
+    const rv = ri / rings
+    const r = rv * maxR
 
     for (let si = 0; si <= segments; si++) {
-      const sFrac = si / segments
-      const angle = startAngle + sFrac * fanAngle
+      const su = si / segments
+      const angle = -fanAngle / 2 + su * fanAngle
 
-      // Base position
-      let x = Math.cos(angle) * r
-      let z = Math.sin(angle) * r
+      const x = r * Math.sin(angle)
+      const z = r * Math.cos(angle)
 
-      // Radial ridges — sinusoidal bumps in the y direction
-      const ridgeCount = 13
-      const ridge = Math.sin(angle * ridgeCount) * 0.008 * rFrac * rFrac
+      // Dome curvature
+      const dome = Math.sin(rv * Math.PI) * 0.65
 
-      // Scalloped edge — wavy rim
-      let edgeWave = 0
-      if (rFrac > 0.85) {
-        edgeWave = Math.sin(angle * ridgeCount) * 0.015 * ((rFrac - 0.85) / 0.15)
-      }
+      // Radial ridges
+      const ridgePhase = angle * ridgeCount
+      const ridge = Math.pow(Math.abs(Math.cos(ridgePhase)), 1.5) * 0.06 * rv
 
-      // Slight organic wobble
-      const wobble = (rng() - 0.5) * 0.003 * rFrac
+      // Fine groove between ridges (subtle valleys)
+      const groove = -Math.pow(Math.abs(Math.sin(ridgePhase)), 4) * 0.02 * rv
 
-      const y = cup + ridge + edgeWave + wobble
+      // Wavy edge frill
+      const edgeT = Math.max(0, (rv - 0.85) / 0.15)
+      const frill = edgeT * Math.sin(angle * ridgeCount) * 0.04
+
+      const curveFactor = isTop ? 1 : 0.28
+      const y = (dome + ridge + groove + frill) * curveFactor * (isTop ? 1 : -1)
 
       positions.push(x, y, z)
-      normals.push(0, 1, 0) // will recompute
-      uvs.push(sFrac, rFrac)
+      uvs.push(su, rv)
     }
   }
 
-  // Build triangle indices
-  const vertsPerRing = segments + 1
   for (let ri = 0; ri < rings; ri++) {
     for (let si = 0; si < segments; si++) {
-      const a = ri * vertsPerRing + si
+      const a = ri * (segments + 1) + si
       const b = a + 1
-      const c = a + vertsPerRing
+      const c = a + (segments + 1)
       const d = c + 1
-      indices.push(a, c, b)
-      indices.push(b, c, d)
+
+      if (isTop) {
+        indices.push(a, c, b)
+        indices.push(b, c, d)
+      } else {
+        indices.push(a, b, c)
+        indices.push(b, d, c)
+      }
     }
   }
 
   const geo = new THREE.BufferGeometry()
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
   geo.setIndex(indices)
   geo.computeVertexNormals()
@@ -490,142 +368,75 @@ function createScallopValveGeometry(rng, radius = 0.34, segments = 24, rings = 1
 }
 
 /**
- * Shell coral — realistic open seashell with pearl, matching the reference
- * photo.  Warm cream/peach/golden nacre, proper scallop shape, iridescent
- * pearl, pearlescent MeshPhysicalMaterial.
+ * ShellCoral — exact ScallopShell from shell-gleam-studio, adapted
+ * to work as a coral placement in the underwater portfolio.
+ * Geometry, materials, and pearl are identical to the studio version.
  */
-function ShellCoral({ position, scale, colorIdx, rng }) {
-  const rotY = rng() * Math.PI * 2
+function ShellCoral({ position, scale, colorIdx, rng, detail = 1 }) {
+  const rotY = rng ? rng() * Math.PI * 2 : 0
+  const pearlRef = useRef()
 
-  // Per-instance variation
-  const openAngle = 0.5 + rng() * 0.35       // how wide the shell gapes
-  const pearlSize = 0.055 + rng() * 0.025
-  const pearlOffY = 0.02 + rng() * 0.015
-  const shellTilt = (rng() - 0.5) * 0.08     // slight natural tilt
+  const topGeo = useMemo(() => createShellHalf(true, detail), [detail])
+  const bottomGeo = useMemo(() => createShellHalf(false, detail), [detail])
 
-  // Scallop valve geometry (shared between halves)
-  const valveGeo = useMemo(() => createScallopValveGeometry(rng), [])
-
-  // Textures
-  const innerTex = useMemo(() => createShellTexture(512, true), [])
-  const outerTex = useMemo(() => createShellTexture(512, false), [])
-  const pearlTex = useMemo(() => createPearlTexture(256), [])
-
-  // Shell colours from the reference image
-  const shellColor = useMemo(() => new THREE.Color('#F0D8C0'), [])     // warm cream
-  const outerColor = useMemo(() => new THREE.Color('#C9976A'), [])     // golden tan
-  const pearlColor = useMemo(() => new THREE.Color('#F5EDE4'), [])     // creamy white
-  const baseColor = useMemo(() => new THREE.Color('#8B7355'), [])      // sandy rock
-
-  // Hinge point — where the two valves meet
-  const hingeZ = -0.3
+  // Subtle pearl bob animation (from studio)
+  useFrame((state) => {
+    if (pearlRef.current) {
+      pearlRef.current.position.y = 0.1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.012
+    }
+  })
 
   return (
-    <group position={position} scale={scale} rotation={[shellTilt, rotY, 0]}>
-
-      {/* ── sandy base — natural anchor on the ocean floor ── */}
-      <mesh position={[0, -0.06, 0]} receiveShadow>
-        <dodecahedronGeometry args={[0.14, 1]} />
-        <meshStandardMaterial
-          color={baseColor}
-          roughness={0.95}
-          metalness={0.02}
-          flatShading
-        />
-      </mesh>
-
-      {/* ── BOTTOM VALVE (rests on base, inner nacre facing up) ── */}
-      <group position={[0, 0.02, 0]}>
-        {/* inner nacre surface (facing up) */}
-        <mesh geometry={valveGeo} castShadow receiveShadow>
-          <meshPhysicalMaterial
-            map={innerTex}
-            color={shellColor}
-            roughness={0.2}
-            metalness={0.15}
-            clearcoat={0.6}
-            clearcoatRoughness={0.15}
-            sheen={0.4}
-            sheenColor={new THREE.Color('#FFE4D6')}
-            side={THREE.FrontSide}
-          />
-        </mesh>
-        {/* outer surface (facing down) */}
-        <mesh geometry={valveGeo} receiveShadow>
-          <meshPhysicalMaterial
-            map={outerTex}
-            color={outerColor}
-            roughness={0.55}
-            metalness={0.05}
-            side={THREE.BackSide}
-          />
-        </mesh>
-      </group>
-
-      {/* ── TOP VALVE (hinged open, inner nacre facing down toward pearl) ── */}
-      <group position={[0, 0.02, hingeZ]}>
-        <group rotation={[-openAngle, 0, 0]} position={[0, 0, -hingeZ]}>
-          <group position={[0, 0, hingeZ]}>
-            {/* inner nacre (now angled, facing inward) */}
-            <mesh geometry={valveGeo} castShadow receiveShadow>
-              <meshPhysicalMaterial
-                map={innerTex}
-                color={shellColor}
-                roughness={0.2}
-                metalness={0.15}
-                clearcoat={0.6}
-                clearcoatRoughness={0.15}
-                sheen={0.4}
-                sheenColor={new THREE.Color('#FFE4D6')}
-                side={THREE.FrontSide}
-              />
-            </mesh>
-            {/* outer surface */}
-            <mesh geometry={valveGeo} castShadow receiveShadow>
-              <meshPhysicalMaterial
-                map={outerTex}
-                color={outerColor}
-                roughness={0.55}
-                metalness={0.05}
-                side={THREE.BackSide}
-              />
-            </mesh>
-          </group>
-        </group>
-      </group>
-
-      {/* ── PEARL — smooth iridescent sphere ── */}
-      <mesh position={[0, pearlOffY, 0]} castShadow>
-        <sphereGeometry args={[pearlSize, 32, 24]} />
+    <group position={position} scale={scale} rotation={[0.2, rotY, 0]}>
+      {/* ── Bottom valve ── */}
+      <mesh geometry={bottomGeo} castShadow receiveShadow>
         <meshPhysicalMaterial
-          map={pearlTex}
-          color={pearlColor}
-          roughness={0.12}
-          metalness={0.25}
-          clearcoat={1.0}
-          clearcoatRoughness={0.05}
-          sheen={0.8}
-          sheenColor={new THREE.Color('#FFF0E8')}
-          emissive={new THREE.Color('#F5E6D3')}
-          emissiveIntensity={0.08}
-          iridescence={0.3}
-          iridescenceIOR={1.8}
+          color="#e07898"
+          roughness={0.2}
+          metalness={0.0}
+          clearcoat={0.4}
+          clearcoatRoughness={0.15}
+          sheen={1.0}
+          sheenColor={new THREE.Color('#ffc0d0')}
+          sheenRoughness={0.15}
+          side={THREE.DoubleSide}
+          envMapIntensity={0.2}
         />
       </mesh>
 
-      {/* ── Pearl highlight glow (subtle light catch) ── */}
-      <mesh position={[pearlSize * 0.25, pearlOffY + pearlSize * 0.35, pearlSize * 0.2]}>
-        <sphereGeometry args={[pearlSize * 0.15, 8, 6]} />
-        <meshBasicMaterial color="#FFFFFF" transparent opacity={0.15} />
-      </mesh>
+      {/* ── Top valve (hinged open) ── */}
+      <group rotation={[-0.75, 0, 0]}>
+        <mesh geometry={topGeo} castShadow receiveShadow>
+          <meshPhysicalMaterial
+            color="#d46a88"
+            roughness={0.35}
+            metalness={0.0}
+            clearcoat={0.3}
+            clearcoatRoughness={0.3}
+            sheen={0.8}
+            sheenColor={new THREE.Color('#f5a0b8')}
+            sheenRoughness={0.25}
+            side={THREE.DoubleSide}
+            envMapIntensity={0.3}
+          />
+        </mesh>
+      </group>
 
-      {/* ── Hinge nub — where the two valves connect ── */}
-      <mesh position={[0, 0.03, hingeZ]} castShadow>
-        <sphereGeometry args={[0.035, 8, 6]} />
-        <meshStandardMaterial
-          color={outerColor}
-          roughness={0.7}
+      {/* ── Pearl ── */}
+      <mesh ref={pearlRef} position={[0, 0.1, 0.75]} castShadow>
+        <sphereGeometry args={[0.3, 64, 64]} />
+        <meshPhysicalMaterial
+          color="#f8f0e8"
+          roughness={0.02}
           metalness={0.05}
+          clearcoat={1.0}
+          clearcoatRoughness={0.01}
+          sheen={1.0}
+          sheenColor={new THREE.Color('#ffe8ef')}
+          sheenRoughness={0.08}
+          envMapIntensity={2.0}
+          iridescence={0.3}
+          iridescenceIOR={1.5}
         />
       </mesh>
     </group>
@@ -633,7 +444,7 @@ function ShellCoral({ position, scale, colorIdx, rng }) {
 }
 
 /* ─────────────── coral type registry ─────────────── */
-const CORAL_TYPES = [BranchingCoral, BrainCoral, TubeCoral, FanCoral, RockCoral, ShellCoral]
+const CORAL_TYPES = [BranchingCoral, BrainCoral, TubeCoral, FanCoral, RockCoral]
 
 /* ───────────────── placement constants ───────────────── */
 const FLOOR_Y = -2
@@ -707,11 +518,90 @@ function generateAllCorals() {
   return corals
 }
 
+/**
+ * Single prominent shell for the Introduction section.
+ * Placed on the right side of the viewport, large enough to fill ~1/4 screen.
+ * Uses higher geometry detail for a smooth, polished look.
+ */
+function IntroShell() {
+  const pearlRef = useRef()
+  const topGeo = useMemo(() => createShellHalf(true, 1.4), [])
+  const bottomGeo = useMemo(() => createShellHalf(false, 1.4), [])
+
+  useFrame((state) => {
+    if (pearlRef.current) {
+      pearlRef.current.position.y = 0.1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.012
+    }
+  })
+
+  // Introduction camera: { x: -6, y: 2, z: 0 }, looks toward -z
+  // Right side of screen = more positive x from camera
+  return (
+    <group position={[-2, FLOOR_Y + 1.8, -8]} scale={1.1} rotation={[0.15, -0.8, 0]}>
+      {/* Bottom valve */}
+      <mesh geometry={bottomGeo} castShadow receiveShadow>
+        <meshPhysicalMaterial
+          color="#e07898"
+          roughness={0.18}
+          metalness={0.0}
+          clearcoat={0.5}
+          clearcoatRoughness={0.1}
+          sheen={1.0}
+          sheenColor={new THREE.Color('#ffc0d0')}
+          sheenRoughness={0.12}
+          side={THREE.DoubleSide}
+          envMapIntensity={0.25}
+        />
+      </mesh>
+
+      {/* Top valve (hinged open) */}
+      <group rotation={[-0.75, 0, 0]}>
+        <mesh geometry={topGeo} castShadow receiveShadow>
+          <meshPhysicalMaterial
+            color="#d46a88"
+            roughness={0.3}
+            metalness={0.0}
+            clearcoat={0.35}
+            clearcoatRoughness={0.25}
+            sheen={0.8}
+            sheenColor={new THREE.Color('#f5a0b8')}
+            sheenRoughness={0.2}
+            side={THREE.DoubleSide}
+            envMapIntensity={0.35}
+          />
+        </mesh>
+      </group>
+
+      {/* Pearl */}
+      <mesh ref={pearlRef} position={[0, 0.1, 0.75]} castShadow>
+        <sphereGeometry args={[0.3, 64, 64]} />
+        <meshPhysicalMaterial
+          color="#f8f0e8"
+          roughness={0.02}
+          metalness={0.05}
+          clearcoat={1.0}
+          clearcoatRoughness={0.01}
+          sheen={1.0}
+          sheenColor={new THREE.Color('#ffe8ef')}
+          sheenRoughness={0.08}
+          envMapIntensity={2.0}
+          iridescence={0.3}
+          iridescenceIOR={1.5}
+        />
+      </mesh>
+    </group>
+  )
+}
+
 export default function Corals() {
   const corals = useMemo(() => generateAllCorals(), [])
 
   return (
     <group>
+      {/* Single prominent shell on the Introduction page (right side) */}
+      <IntroShell />
+
+      {/* All other coral types (no shells) across the scene */}
       {corals.map((c, i) => {
         const CoralComp = CORAL_TYPES[c.type]
         const coralRng = mulberry32(c.seed)

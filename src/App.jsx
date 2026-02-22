@@ -155,7 +155,7 @@ export default function App() {
             toneMapping: THREE.ACESFilmicToneMapping,
           }}
           onCreated={({ gl }) => {
-            gl.toneMappingExposure = 1.1
+            gl.toneMappingExposure = 0.9
             gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
             setTimeout(() => window.__loaderDismiss?.(), 1800)
           }}

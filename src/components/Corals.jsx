@@ -292,56 +292,66 @@ function RockCoral({ position, scale, colorIdx, rng }) {
   )
 }
 
-/* ─────────────── shell geometry from shell-gleam-studio ─────────────── */
+/* ─────────────── high-quality scallop shell geometry ─────────────── */
 
 /**
- * Creates one half of the scallop shell (top or bottom valve).
- * Exact geometry from the shell-gleam-studio project.
+ * Creates one half of a smooth, high-subdivision scallop shell valve.
+ * Produces buttery-smooth surfaces with gentle curved ridges and soft wavy edges.
+ *
+ * @param {boolean} isTop  — true for the domed top lid, false for the shallow bottom tray
+ * @param {number}  detail — multiplier for subdivision (1 = standard, 2 = ultra)
  */
 function createShellHalf(isTop, detail = 1) {
-  const segments = Math.round(140 * detail)
-  const rings = Math.round(100 * detail)
-  const ridgeCount = 16
-  const fanAngle = Math.PI * 0.85
-  const maxR = 2.2
+  const segments = Math.round(200 * detail)   // angular resolution
+  const rings    = Math.round(140 * detail)    // radial resolution
+  const ridgeCount = 18
+  const fanAngle   = Math.PI * 0.88           // slightly wider fan
+  const maxR       = 2.2
 
   const positions = []
   const uvs = []
   const indices = []
 
   for (let ri = 0; ri <= rings; ri++) {
-    const rv = ri / rings
-    const r = rv * maxR
+    const rv = ri / rings                      // 0 → 1 from hinge to rim
+    const r  = rv * maxR
 
     for (let si = 0; si <= segments; si++) {
-      const su = si / segments
+      const su    = si / segments
       const angle = -fanAngle / 2 + su * fanAngle
 
       const x = r * Math.sin(angle)
       const z = r * Math.cos(angle)
 
-      // Dome curvature
-      const dome = Math.sin(rv * Math.PI) * 0.65
+      // ── smooth dome curvature ──
+      const dome = Math.sin(rv * Math.PI) * 0.62
 
-      // Radial ridges
+      // ── soft rounded ridges (smooth sine blend, no sharp pow) ──
       const ridgePhase = angle * ridgeCount
-      const ridge = Math.pow(Math.abs(Math.cos(ridgePhase)), 1.5) * 0.06 * rv
+      const ridgeBase  = (Math.cos(ridgePhase) + 1) * 0.5          // 0–1 smooth
+      const ridge      = ridgeBase * ridgeBase * 0.055 * rv         // gentle quadratic
 
-      // Fine groove between ridges (subtle valleys)
-      const groove = -Math.pow(Math.abs(Math.sin(ridgePhase)), 4) * 0.02 * rv
+      // ── subtle groove between ridges ──
+      const grooveBase = (Math.sin(ridgePhase) + 1) * 0.5
+      const groove     = -grooveBase * grooveBase * grooveBase * 0.012 * rv
 
-      // Wavy edge frill
-      const edgeT = Math.max(0, (rv - 0.85) / 0.15)
-      const frill = edgeT * Math.sin(angle * ridgeCount) * 0.04
+      // ── soft wavy edge frill (only near the rim) ──
+      const edgeT = Math.max(0, (rv - 0.82) / 0.18)
+      const edgeSmooth = edgeT * edgeT                              // smooth ease-in
+      const frill = edgeSmooth * Math.sin(angle * ridgeCount) * 0.035
 
-      const curveFactor = isTop ? 1 : 0.28
-      const y = (dome + ridge + groove + frill) * curveFactor * (isTop ? 1 : -1)
+      // ── gentle concentric growth-ring undulation ──
+      const growthRing = Math.sin(rv * 45) * 0.003 * rv
+
+      const curveFactor = isTop ? 1 : 0.3
+      const y = (dome + ridge + groove + frill + growthRing) * curveFactor * (isTop ? 1 : -1)
 
       positions.push(x, y, z)
       uvs.push(su, rv)
     }
   }
 
+  // Build triangle strip indices
   for (let ri = 0; ri < rings; ri++) {
     for (let si = 0; si < segments; si++) {
       const a = ri * (segments + 1) + si
@@ -520,73 +530,76 @@ function generateAllCorals() {
 
 /**
  * Single prominent shell for the Introduction section.
- * Placed on the right side of the viewport, large enough to fill ~1/4 screen.
- * Uses higher geometry detail for a smooth, polished look.
+ * High-detail smooth geometry, glossy premium materials, natural pose on sand.
  */
 function IntroShell() {
   const pearlRef = useRef()
-  const topGeo = useMemo(() => createShellHalf(true, 1.4), [])
-  const bottomGeo = useMemo(() => createShellHalf(false, 1.4), [])
+  // detail=1.5 → 300 segments × 210 rings = ultra-smooth, no visible polygons
+  const topGeo = useMemo(() => createShellHalf(true, 1.5), [])
+  const bottomGeo = useMemo(() => createShellHalf(false, 1.5), [])
 
   useFrame((state) => {
     if (pearlRef.current) {
-      pearlRef.current.position.y = 0.1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.012
+      pearlRef.current.position.y = 0.1 + Math.sin(state.clock.elapsedTime * 0.5) * 0.01
     }
   })
 
-  // Introduction camera: { x: -6, y: 2, z: 0 }, looks toward -z
-  // Right side of screen = more positive x from camera
+  // Camera: { x:-6, y:2, z:0 } looking toward -z
+  // Shell placed to the right, on the sand, angled to show the open interior + pearl
   return (
-    <group position={[-2, FLOOR_Y + 1.8, -8]} scale={1.1} rotation={[0.15, -0.8, 0]}>
-      {/* Bottom valve */}
+    <group position={[-2, FLOOR_Y + 0.25, -9]} scale={0.85} rotation={[-0.12, -0.8, 0.08]}>
+
+      {/* ── Bottom valve (inner surface — soft glossy nacre) ── */}
       <mesh geometry={bottomGeo} castShadow receiveShadow>
         <meshPhysicalMaterial
-          color="#e07898"
-          roughness={0.18}
+          color="#c9879e"
+          roughness={0.28}
           metalness={0.0}
-          clearcoat={0.5}
-          clearcoatRoughness={0.1}
-          sheen={1.0}
-          sheenColor={new THREE.Color('#ffc0d0')}
-          sheenRoughness={0.12}
+          clearcoat={0.35}
+          clearcoatRoughness={0.2}
+          sheen={0.5}
+          sheenColor={new THREE.Color('#e0a8b8')}
+          sheenRoughness={0.25}
           side={THREE.DoubleSide}
-          envMapIntensity={0.25}
+          envMapIntensity={0.3}
         />
       </mesh>
 
-      {/* Top valve (hinged open) */}
-      <group rotation={[-0.75, 0, 0]}>
+      {/* ── Top valve (outer surface — slightly matte) ── */}
+      <group rotation={[-0.7, 0, 0]}>
         <mesh geometry={topGeo} castShadow receiveShadow>
           <meshPhysicalMaterial
-            color="#d46a88"
-            roughness={0.3}
+            color="#b87a92"
+            roughness={0.45}
             metalness={0.0}
-            clearcoat={0.35}
-            clearcoatRoughness={0.25}
-            sheen={0.8}
-            sheenColor={new THREE.Color('#f5a0b8')}
-            sheenRoughness={0.2}
+            clearcoat={0.15}
+            clearcoatRoughness={0.35}
+            sheen={0.3}
+            sheenColor={new THREE.Color('#d49aae')}
+            sheenRoughness={0.35}
             side={THREE.DoubleSide}
-            envMapIntensity={0.35}
+            envMapIntensity={0.2}
           />
         </mesh>
       </group>
 
-      {/* Pearl */}
+      {/* ── Pearl (brightest object — reflective, no emissive) ── */}
       <mesh ref={pearlRef} position={[0, 0.1, 0.75]} castShadow>
-        <sphereGeometry args={[0.3, 64, 64]} />
+        <sphereGeometry args={[0.28, 64, 64]} />
         <meshPhysicalMaterial
-          color="#f8f0e8"
-          roughness={0.02}
-          metalness={0.05}
+          color="#f0e8e0"
+          roughness={0.03}
+          metalness={0.1}
           clearcoat={1.0}
-          clearcoatRoughness={0.01}
-          sheen={1.0}
-          sheenColor={new THREE.Color('#ffe8ef')}
+          clearcoatRoughness={0.02}
+          sheen={0.6}
+          sheenColor={new THREE.Color('#f5e8e0')}
           sheenRoughness={0.08}
-          envMapIntensity={2.0}
-          iridescence={0.3}
+          envMapIntensity={1.8}
+          iridescence={0.25}
           iridescenceIOR={1.5}
+          specularIntensity={1.5}
+          specularColor={new THREE.Color('#ffffff')}
         />
       </mesh>
     </group>

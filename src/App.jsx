@@ -9,6 +9,7 @@ import Overlay from './components/Overlay'
 import OceanFloor from './components/OceanFloor'
 import UnderwaterLighting from './components/UnderwaterLighting'
 import Corals from './components/Corals'
+import MarineAssets from './components/MarineAssets'
 import Bubbles from './components/Bubbles'
 import Particles from './components/Particles'
 
@@ -138,6 +139,7 @@ export default function App() {
           <UnderwaterLighting />
           <OceanFloor />
           <Corals />
+          <MarineAssets />
           <Bubbles />
           <Particles />
           <CameraController proxy={proxy} />

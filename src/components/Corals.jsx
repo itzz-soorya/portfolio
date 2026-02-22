@@ -344,8 +344,8 @@ function generateAllCorals() {
       const colorIdx = rng() < 0.6 ? clusterPalette : Math.floor(rng() * CORAL_PALETTES.length)
 
       const s = j === heroIdx
-        ? 1.4 + rng() * 0.8    // hero: 1.4–2.2
-        : 0.5 + rng() * 0.6    // standard: 0.5–1.1
+        ? 2.5 + rng() * 1.5    // hero: 2.5–4.0
+        : 1.2 + rng() * 1.0    // standard: 1.2–2.2
 
       corals.push({ x, z, type, colorIdx, s, seed: Math.floor(rng() * 99999) })
     }
@@ -358,7 +358,7 @@ function generateAllCorals() {
     const z = Z_MIN - rng() * zRange
     const type = Math.floor(rng() * CORAL_TYPES.length)
     const colorIdx = Math.floor(rng() * CORAL_PALETTES.length)
-    const s = 0.4 + rng() * 0.4
+    const s = 0.8 + rng() * 0.6
 
     corals.push({ x, z, type, colorIdx, s, seed: Math.floor(rng() * 99999) })
   }

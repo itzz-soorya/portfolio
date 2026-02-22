@@ -26,12 +26,12 @@ function GroundBubbleEffect({ sectionPos, active }) {
     const arr = []
     for (let i = 0; i < BUBBLE_COUNT; i++) {
       arr.push({
-        x: (Math.random() - 0.5) * 1.2,
-        z: (Math.random() - 0.5) * 1.2,
-        speed: 0.3 + Math.random() * 0.4,
+        x: (Math.random() - 0.5) * 2.0,
+        z: (Math.random() - 0.5) * 2.0,
+        speed: 0.25 + Math.random() * 0.3,
         wobblePhase: Math.random() * Math.PI * 2,
-        size: 0.035 + Math.random() * 0.025,
-        delay: i * 0.25,
+        size: 0.15 + Math.random() * 0.1,
+        delay: i * 0.2,
       })
     }
     return arr
@@ -41,10 +41,10 @@ function GroundBubbleEffect({ sectionPos, active }) {
     const arr = []
     for (let i = 0; i < DUST_COUNT; i++) {
       arr.push({
-        x: (Math.random() - 0.5) * 1.8,
-        z: (Math.random() - 0.5) * 1.8,
+        x: (Math.random() - 0.5) * 2.5,
+        z: (Math.random() - 0.5) * 2.5,
         speed: 0.08 + Math.random() * 0.12,
-        size: 0.012 + Math.random() * 0.01,
+        size: 0.04 + Math.random() * 0.03,
       })
     }
     return arr
@@ -81,8 +81,8 @@ function GroundBubbleEffect({ sectionPos, active }) {
         )
         // Fade near top
         const fadeUp = y > 3 ? Math.max(0, 1 - (y - 3) / 1.5) : 1
-        mesh.material.opacity = localP * fadeUp * 0.4
-        mesh.scale.setScalar(d.size * (0.7 + Math.sin(time * 2 + i) * 0.15))
+        mesh.material.opacity = localP * fadeUp * 0.7
+        mesh.scale.setScalar(d.size * (0.8 + Math.sin(time * 2 + i) * 0.15))
       }
     })
 
@@ -94,7 +94,7 @@ function GroundBubbleEffect({ sectionPos, active }) {
       if (mesh.visible) {
         const y = p * d.speed * 1.5 + Math.sin(time * 0.8 + i) * 0.03
         mesh.position.set(d.x, y, d.z)
-        mesh.material.opacity = Math.min(p * 0.6, 0.2) * Math.max(0, 1 - y / 0.8)
+        mesh.material.opacity = Math.min(p * 0.8, 0.35) * Math.max(0, 1 - y / 1.2)
         mesh.scale.setScalar(d.size)
       }
     })

@@ -25,21 +25,20 @@ export default function GlassContactForm({ activeSection, enabled }) {
     if (!el) return
 
     if (isActive) {
-      // Position: contact is right-side (x:6) → box on left
-      el.style.left = '6%'
-      el.style.right = 'auto'
-
+      // Rise from ground to center
       gsap.killTweensOf(el)
       gsap.set(el, { display: 'block' })
 
       gsap.fromTo(el,
         {
-          y: '80vh',
+          xPercent: -50,
+          yPercent: 150,
           opacity: 0,
           scale: 0.85,
         },
         {
-          y: 0,
+          xPercent: -50,
+          yPercent: -50,
           opacity: 1,
           scale: 1,
           duration: 1.3,
@@ -50,7 +49,7 @@ export default function GlassContactForm({ activeSection, enabled }) {
     } else {
       gsap.killTweensOf(el)
       gsap.to(el, {
-        y: '60vh',
+        yPercent: 150,
         opacity: 0,
         scale: 0.9,
         duration: 0.7,

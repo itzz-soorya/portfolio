@@ -34,23 +34,20 @@ export default function GlassContentBox({ activeSection, enabled }) {
     const isActive = enabled && section && ACTIVE_IDS.includes(section.id)
 
     if (isActive && content && content[section.id]) {
-      // Position based on section side
-      const isLeft = section.position.x < 0
-      el.style.left = isLeft ? 'auto' : '6%'
-      el.style.right = isLeft ? '6%' : 'auto'
-
-      // Rise from ground (bottom of viewport)
+      // Rise from ground (bottom of viewport) to center
       gsap.killTweensOf(el)
       gsap.set(el, { display: 'block' })
 
       gsap.fromTo(el,
         {
-          y: '80vh',    // start below viewport (ground level)
+          xPercent: -50,
+          yPercent: 150,   // start below viewport (ground level)
           opacity: 0,
           scale: 0.85,
         },
         {
-          y: 0,         // rise to center position (CSS top: 50%)
+          xPercent: -50,
+          yPercent: -50,   // center on screen (top:50% + translate -50%)
           opacity: 1,
           scale: 1,
           duration: 1.3,
@@ -62,7 +59,7 @@ export default function GlassContentBox({ activeSection, enabled }) {
       // Sink back into ground
       gsap.killTweensOf(el)
       gsap.to(el, {
-        y: '60vh',
+        yPercent: 150,
         opacity: 0,
         scale: 0.9,
         duration: 0.7,

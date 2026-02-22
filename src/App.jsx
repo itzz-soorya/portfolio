@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Loader from './components/Loader'
+import Intro from './components/Intro'
 import Overlay from './components/Overlay'
 import OceanFloor from './components/OceanFloor'
 import UnderwaterLighting from './components/UnderwaterLighting'
@@ -40,9 +41,10 @@ function CameraController({ proxy }) {
 
 export default function App() {
   const proxy = useRef({ x: 0, y: 3.5, z: 0, rotY: 0 })
-  const [sceneReady, setSceneReady] = useState(false)
+  const [loaderDone, setLoaderDone] = useState(false)
+  const [introDone, setIntroDone] = useState(false)
 
-  /* ── Lock scroll while loader is visible ── */
+  /* ── Lock scroll until full intro sequence completes ── */
   useEffect(() => {
     document.body.style.overflow = 'hidden'
   }, [])
@@ -74,8 +76,9 @@ export default function App() {
 
   return (
     <>
-      {/* ── Cinematic loader ── */}
-      <Loader onFinished={() => setSceneReady(true)} />
+      {/* ── Cinematic loader → intro sequence ── */}
+      <Loader onFinished={() => setLoaderDone(true)} />
+      {loaderDone && !introDone && <Intro onComplete={() => setIntroDone(true)} />}
 
       {/* Fixed full-screen canvas — always covers entire viewport */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>

@@ -18,7 +18,7 @@ export default function Loader({ onFinished }) {
     setFadeOut(true)
     setTimeout(() => {
       setHidden(true)
-      document.body.style.overflow = ''   // re-enable scroll
+      // scroll stays locked — Intro component will unlock it
       onFinished?.()
     }, 1200) // matches CSS transition duration
   }, [onFinished])

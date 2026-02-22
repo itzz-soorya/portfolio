@@ -12,9 +12,10 @@
 html, body {
   width: 100%;
   overflow-x: hidden;
-  background-color: #020617;
-  color: #e2e8f0;
+  background-color: #042c3a;
+  color: #bfefff;
   font-family: system-ui, -apple-system, sans-serif;
+  scroll-behavior: auto;
 }
 
 #root {

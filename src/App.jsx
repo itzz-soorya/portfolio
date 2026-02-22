@@ -43,8 +43,9 @@ export default function App() {
   const proxy = useRef({ x: 0, y: 3.5, z: 0, rotY: 0 })
   const introRef = useRef()
 
-  /* ── Lock scroll until loader finishes ── */
+  /* ── Lock scroll until loader finishes + reset to top on reload ── */
   useEffect(() => {
+    window.scrollTo(0, 0)
     document.body.style.overflow = 'hidden'
   }, [])
 
@@ -57,11 +58,11 @@ export default function App() {
           trigger: '#scroll-container',
           start: 'top top',
           end: 'bottom bottom',
-          scrub: true,
+          scrub: 1.2,   // smooth interpolation — 1.2s catch-up for buttery feel
         },
       })
 
-      /* ── Phase 0 (0–1.0): Intro text scales UP + passes through camera ── */
+      /* ── Phase 0 (0–0.9): Intro pass-through + camera begins moving simultaneously ── */
       const introEl = introRef.current
       if (introEl) {
         const nameEl = introEl.querySelector('.intro-name')
@@ -69,36 +70,40 @@ export default function App() {
         const sub2El = introEl.querySelector('.intro-sub2')
         const glowEl = introEl.querySelector('.intro-glow')
 
-        // Text scales up — small → medium → BIG → full screen → past camera
-        tl.to(nameEl, { scale: 3.5, duration: 0.7, ease: 'power1.in' }, 0)
-        tl.to(sub1El, { scale: 2.8, duration: 0.7, ease: 'power1.in' }, 0)
-        tl.to(sub2El, { scale: 2.5, duration: 0.7, ease: 'power1.in' }, 0)
-        tl.to(glowEl, { scale: 4, duration: 0.7, ease: 'power1.in' }, 0)
+        // Phase A (0–0.4): Gentle scale up — text approaches, camera starts drifting left
+        tl.to(nameEl, { scale: 1.8, duration: 0.4, ease: 'power1.in' }, 0)
+        tl.to(sub1El, { scale: 1.5, duration: 0.4, ease: 'power1.in' }, 0)
+        tl.to(sub2El, { scale: 1.4, duration: 0.4, ease: 'power1.in' }, 0)
+        tl.to(glowEl, { scale: 2, duration: 0.4, ease: 'power1.in' }, 0)
 
-        // Continue scaling past camera — door pass-through
-        tl.to(nameEl, { scale: 12, letterSpacing: '1.5em', duration: 0.3, ease: 'power2.in' }, 0.7)
-        tl.to(sub1El, { scale: 8, duration: 0.3, ease: 'power2.in' }, 0.7)
-        tl.to(sub2El, { scale: 7, duration: 0.3, ease: 'power2.in' }, 0.7)
-        tl.to(glowEl, { scale: 12, duration: 0.3, ease: 'power2.in' }, 0.7)
+        // Camera starts moving during intro — continuous feel, no break
+        tl.to(p, { x: -6, z: -3, rotY: -0.04, duration: 0.5, ease: 'power1.in' }, 0.2)
 
-        // Fade out as text crosses past the camera
-        tl.to(nameEl, { opacity: 0, duration: 0.25, ease: 'power1.in' }, 0.75)
-        tl.to(sub1El, { opacity: 0, duration: 0.2, ease: 'power1.in' }, 0.7)
-        tl.to(sub2El, { opacity: 0, duration: 0.2, ease: 'power1.in' }, 0.65)
-        tl.to(glowEl, { opacity: 0, duration: 0.2, ease: 'power1.in' }, 0.75)
+        // Phase B (0.4–0.7): Scale to max 2.8x + blur — passing through
+        tl.to(nameEl, { scale: 2.8, filter: 'blur(6px)', duration: 0.3, ease: 'power2.in' }, 0.4)
+        tl.to(sub1El, { scale: 2.2, filter: 'blur(8px)', duration: 0.3, ease: 'power2.in' }, 0.4)
+        tl.to(sub2El, { scale: 2.0, filter: 'blur(10px)', duration: 0.3, ease: 'power2.in' }, 0.4)
+        tl.to(glowEl, { scale: 3.5, duration: 0.3, ease: 'power2.in' }, 0.4)
 
-        // Hide container after pass-through
-        tl.set(introEl, { display: 'none' }, 1.0)
-        tl.set(introEl, { display: 'flex' }, '<-1.0') // restore on reverse
+        // Fade out — subtitles first, then name
+        tl.to(sub2El, { opacity: 0, duration: 0.18, ease: 'power1.in' }, 0.42)
+        tl.to(sub1El, { opacity: 0, duration: 0.18, ease: 'power1.in' }, 0.48)
+        tl.to(nameEl, { opacity: 0, duration: 0.22, ease: 'power1.in' }, 0.52)
+        tl.to(glowEl, { opacity: 0, duration: 0.18, ease: 'power1.in' }, 0.55)
+
+        // Hide container once fully faded
+        tl.set(introEl, { display: 'none' }, 0.78)
+        tl.set(introEl, { display: 'flex' }, '<-0.78') // restore on reverse
       }
 
-      /* ── Phase 1–6: Cinematic zigzag camera movement ── */
-      tl.to(p, { x: -18, z: -8,  rotY: -0.12, duration: 1, ease: 'power1.inOut' }, 1.0)
-        .to(p, { x:  20, z: -20, rotY:  0.12, duration: 1, ease: 'power1.inOut' })
-        .to(p, { x: -15, z: -32, rotY: -0.10, duration: 1, ease: 'power1.inOut' })
-        .to(p, { x:  18, z: -44, rotY:  0.11, duration: 1, ease: 'power1.inOut' })
-        .to(p, { x: -12, z: -52, rotY: -0.08, duration: 1, ease: 'power1.inOut' })
-        .to(p, { x:   0, z: -60, rotY:  0,    duration: 1, ease: 'power2.inOut' })
+      /* ── Phase 1–6: Full cinematic zigzag — speed increases after intro ── */
+      // First sweep starts faster (text just vanished — "scene enter" boost)
+      tl.to(p, { x: -18, z: -10, rotY: -0.12, duration: 0.9, ease: 'power1.inOut' }, 0.75)
+        .to(p, { x:  20, z: -22, rotY:  0.12, duration: 1, ease: 'power1.inOut' })
+        .to(p, { x: -15, z: -34, rotY: -0.10, duration: 1, ease: 'power1.inOut' })
+        .to(p, { x:  18, z: -46, rotY:  0.11, duration: 1, ease: 'power1.inOut' })
+        .to(p, { x: -12, z: -54, rotY: -0.08, duration: 1, ease: 'power1.inOut' })
+        .to(p, { x:   0, z: -62, rotY:  0,    duration: 1, ease: 'power2.inOut' })
     })
 
     return () => ctx.revert()
@@ -124,6 +129,7 @@ export default function App() {
           }}
           onCreated={({ gl }) => {
             gl.toneMappingExposure = 1.1
+            gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
             // Give the GPU a couple of frames to render, then dismiss loader
             setTimeout(() => window.__loaderDismiss?.(), 1800)
           }}

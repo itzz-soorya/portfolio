@@ -161,3 +161,103 @@ html, body {
 .glass-box[style*="opacity:1"] {
   animation: glassFloat 4s ease-in-out infinite;
 }
+
+/* ─── Glass Contact Form ─── */
+.glass-form {
+  pointer-events: auto;
+}
+
+.glass-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.glass-form-group {
+  width: 100%;
+}
+
+.glass-input {
+  width: 100%;
+  background: rgba(10, 35, 50, 0.5);
+  border: 1px solid rgba(120, 200, 240, 0.12);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  color: rgba(200, 235, 250, 0.85);
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-input::placeholder {
+  color: rgba(160, 200, 220, 0.35);
+  letter-spacing: 1px;
+}
+
+.glass-input:focus {
+  border-color: rgba(120, 200, 240, 0.35);
+  box-shadow: 0 0 12px rgba(80, 180, 220, 0.1), inset 0 0 8px rgba(80, 180, 220, 0.04);
+}
+
+.glass-textarea {
+  resize: none;
+  min-height: 90px;
+}
+
+.glass-submit {
+  background: rgba(80, 180, 220, 0.12);
+  border: 1px solid rgba(120, 200, 240, 0.2);
+  border-radius: 10px;
+  padding: 12px 24px;
+  margin-top: 4px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #AEE9F5;
+  cursor: pointer;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-submit:hover {
+  background: rgba(80, 180, 220, 0.2);
+  border-color: rgba(120, 200, 240, 0.35);
+  box-shadow: 0 0 20px rgba(80, 180, 220, 0.12);
+}
+
+.glass-submit:active {
+  transform: scale(0.97);
+}
+
+.glass-form-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 0;
+}
+
+.glass-form-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(80, 200, 160, 0.15);
+  border: 1px solid rgba(80, 200, 160, 0.3);
+  color: #7edcb4;
+  font-size: 1.2rem;
+}
+
+.glass-form-success p {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: rgba(200, 235, 250, 0.7);
+}

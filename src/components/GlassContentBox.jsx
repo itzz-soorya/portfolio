@@ -3,15 +3,14 @@ import { gsap } from 'gsap'
 import { SECTIONS } from '../config/SectionPositions'
 
 /**
- * IDs that get the glass content box.
- * Github & Contact excluded — they'll have separate behavior.
+ * Sections that show the glass content box.
+ * Github excluded (separate link), Contact excluded (separate form).
  */
 const ACTIVE_IDS = ['introduction', 'stacks', 'projects', 'social']
 
 /**
- * GlassContentBox — HTML overlay that shows content when a section activates.
- * Loads content from /data/portfolioContent.json.
- * Animates: fade in from below with GSAP, slight floating motion.
+ * GlassContentBox — HTML overlay that rises from the ground (bottom of screen)
+ * when a section activates. Content from portfolioContent.json.
  */
 export default function GlassContentBox({ activeSection, enabled }) {
   const [content, setContent] = useState(null)
@@ -26,7 +25,7 @@ export default function GlassContentBox({ activeSection, enabled }) {
       .catch(() => {})
   }, [])
 
-  // Animate box in/out
+  // Animate box in/out — GROUND RISE
   useEffect(() => {
     const el = boxRef.current
     if (!el) return
@@ -35,32 +34,38 @@ export default function GlassContentBox({ activeSection, enabled }) {
     const isActive = enabled && section && ACTIVE_IDS.includes(section.id)
 
     if (isActive && content && content[section.id]) {
-      // Animate in — slide up + fade in
-      gsap.killTweensOf(el)
-      // Position based on section side (left sections → right box, right → left box)
+      // Position based on section side
       const isLeft = section.position.x < 0
       el.style.left = isLeft ? 'auto' : '6%'
       el.style.right = isLeft ? '6%' : 'auto'
 
+      // Rise from ground (bottom of viewport)
+      gsap.killTweensOf(el)
+      gsap.set(el, { display: 'block' })
+
       gsap.fromTo(el,
-        { y: 60, opacity: 0, scale: 0.92, display: 'block' },
         {
-          y: 0,
+          y: '80vh',    // start below viewport (ground level)
+          opacity: 0,
+          scale: 0.85,
+        },
+        {
+          y: 0,         // rise to center position (CSS top: 50%)
           opacity: 1,
           scale: 1,
-          duration: 0.9,
-          delay: 1.2,   // wait for bubble to rise first
-          ease: 'power2.out',
+          duration: 1.3,
+          delay: 0.6,
+          ease: 'power3.out',
         }
       )
     } else {
-      // Animate out
+      // Sink back into ground
       gsap.killTweensOf(el)
       gsap.to(el, {
-        y: 40,
+        y: '60vh',
         opacity: 0,
-        scale: 0.95,
-        duration: 0.5,
+        scale: 0.9,
+        duration: 0.7,
         ease: 'power2.in',
         onComplete: () => { el.style.display = 'none' },
       })

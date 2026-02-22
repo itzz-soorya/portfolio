@@ -14,6 +14,7 @@ import Particles from './components/Particles'
 import CameraRig from './components/CameraRig'
 import SectionActivationController from './components/SectionActivationController'
 import GlassContentBox from './components/GlassContentBox'
+import GlassContactForm from './components/GlassContactForm'
 import { SECTIONS } from './config/SectionPositions'
 
 export default function App() {
@@ -138,6 +139,9 @@ export default function App() {
 
       {/* ── Glass content box — HTML overlay for active section ── */}
       <GlassContentBox activeSection={activeSection} enabled={headerVisible} />
+
+      {/* ── Glass contact form — HTML overlay for Contact section ── */}
+      <GlassContactForm activeSection={activeSection} enabled={headerVisible} />
 
       {/* Fixed full-screen canvas */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>

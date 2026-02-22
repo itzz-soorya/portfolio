@@ -7,6 +7,7 @@ import Overlay from './components/Overlay'
 import OceanFloor from './components/OceanFloor'
 import UnderwaterLighting from './components/UnderwaterLighting'
 import Corals from './components/Corals'
+import Bubbles from './components/Bubbles'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -83,6 +84,7 @@ export default function App() {
           <UnderwaterLighting />
           <OceanFloor />
           <Corals />
+          <Bubbles />
           <CameraController proxy={proxy} />
         </Canvas>
 

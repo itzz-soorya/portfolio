@@ -11,13 +11,70 @@
 
 html, body {
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
   background-color: #042c3a;
   color: #bfefff;
   font-family: system-ui, -apple-system, sans-serif;
-  scroll-behavior: auto;
 }
 
 #root {
   width: 100%;
+}
+
+/* ─── Header Navigation ─── */
+.header-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9990;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px 24px;
+  background: rgba(4, 20, 30, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(100, 200, 240, 0.08);
+  opacity: 0;
+  transform: translateY(-100%);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  pointer-events: none;
+}
+
+.header-nav.header-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.header-nav-inner {
+  display: flex;
+  gap: 36px;
+}
+
+.header-nav-item {
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 300;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(180, 220, 240, 0.5);
+  padding: 8px 4px;
+  transition: color 0.35s ease, text-shadow 0.35s ease, border-bottom-color 0.35s ease;
+  outline: none;
+}
+
+.header-nav-item:hover {
+  color: rgba(200, 240, 255, 0.85);
+}
+
+.header-nav-item.active {
+  color: #AEE9F5;
+  text-shadow: 0 0 8px rgba(174, 233, 245, 0.3), 0 0 20px rgba(174, 233, 245, 0.1);
+  border-bottom-color: rgba(174, 233, 245, 0.5);
 }

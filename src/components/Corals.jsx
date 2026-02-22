@@ -299,7 +299,7 @@ const FLOOR_Y = -2
 const CENTER_CLEAR = 12
 const MAX_X = 45
 const Z_MIN = 20
-const Z_MAX = -80
+const Z_MAX = -110
 
 // Cluster layout — natural reef groupings with open sand
 const NUM_CLUSTERS = 10          // fewer, more defined clusters

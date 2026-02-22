@@ -12,6 +12,8 @@ import MarineAssets from './components/MarineAssets'
 import Bubbles from './components/Bubbles'
 import Particles from './components/Particles'
 import CameraRig from './components/CameraRig'
+import SectionActivationController from './components/SectionActivationController'
+import GlassContentBox from './components/GlassContentBox'
 import { SECTIONS } from './config/SectionPositions'
 
 export default function App() {
@@ -134,6 +136,9 @@ export default function App() {
         visible={headerVisible}
       />
 
+      {/* ── Glass content box — HTML overlay for active section ── */}
+      <GlassContentBox activeSection={activeSection} enabled={headerVisible} />
+
       {/* Fixed full-screen canvas */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <Canvas
@@ -157,6 +162,7 @@ export default function App() {
           <MarineAssets />
           <Bubbles />
           <Particles />
+          <SectionActivationController activeSection={activeSection} enabled={headerVisible} />
           <CameraRig activeSection={activeSection} />
         </Canvas>
       </div>

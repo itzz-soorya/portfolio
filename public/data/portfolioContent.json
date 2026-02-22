@@ -1,0 +1,44 @@
+{
+  "introduction": {
+    "title": "Introduction",
+    "description": "Passionate backend developer diving deep into systems architecture and server-side engineering.",
+    "list": [
+      "Backend Development Enthusiast",
+      "System Design Explorer",
+      "Problem Solver & Debugger",
+      "Continuous Learner"
+    ]
+  },
+  "stacks": {
+    "title": "Tech Stacks",
+    "description": "Tools and technologies I work with to build robust backend systems.",
+    "list": [
+      "Node.js & Express",
+      "Python & Django",
+      "MongoDB & PostgreSQL",
+      "Docker & Linux",
+      "Git & CI/CD",
+      "REST & GraphQL APIs"
+    ]
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "Real-world applications and experiments that showcase my engineering journey.",
+    "list": [
+      "Portfolio — 3D Underwater Experience",
+      "API Gateway — Microservices Router",
+      "Chat System — Real-time WebSockets",
+      "Auth Service — JWT & OAuth2"
+    ]
+  },
+  "social": {
+    "title": "Social",
+    "description": "Connect with me across platforms. Always open to collaborations and conversations.",
+    "list": [
+      "Twitter — @itzz_soorya",
+      "LinkedIn — Soorya",
+      "Instagram — @itzz.soorya",
+      "Discord — soorya#dev"
+    ]
+  }
+}

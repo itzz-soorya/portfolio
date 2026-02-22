@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { gsap } from 'gsap'
@@ -41,10 +41,9 @@ function CameraController({ proxy }) {
 
 export default function App() {
   const proxy = useRef({ x: 0, y: 3.5, z: 0, rotY: 0 })
-  const [loaderDone, setLoaderDone] = useState(false)
-  const [introDone, setIntroDone] = useState(false)
+  const introRef = useRef()
 
-  /* ── Lock scroll until full intro sequence completes ── */
+  /* ── Lock scroll until loader finishes ── */
   useEffect(() => {
     document.body.style.overflow = 'hidden'
   }, [])
@@ -62,8 +61,32 @@ export default function App() {
         },
       })
 
-      // ── Cinematic zigzag: wide lateral sweeps + forward travel ──
-      tl.to(p, { x: -18, z: -8,  rotY: -0.12, duration: 1, ease: 'power1.inOut' })
+      /* ── Phase 0 (0–0.8): Intro text shrinks + fades as camera starts moving ── */
+      // Targets inside the intro container (queried via class names)
+      const introEl = introRef.current
+      if (introEl) {
+        const nameEl = introEl.querySelector('.intro-name')
+        const sub1El = introEl.querySelector('.intro-sub1')
+        const sub2El = introEl.querySelector('.intro-sub2')
+        const glowEl = introEl.querySelector('.intro-glow')
+
+        // Subtitles fade first
+        tl.to(sub2El, { opacity: 0, y: 20, duration: 0.3, ease: 'power1.in' }, 0)
+        tl.to(sub1El, { opacity: 0, y: 15, duration: 0.3, ease: 'power1.in' }, 0.1)
+
+        // Name scales down + fades
+        tl.to(nameEl, { scale: 0.4, opacity: 0, duration: 0.6, ease: 'power2.in' }, 0.15)
+
+        // Glow shrinks away
+        tl.to(glowEl, { scale: 0.2, opacity: 0, duration: 0.5, ease: 'power1.in' }, 0.1)
+
+        // Hide container after text is gone (pointer-events already none)
+        tl.set(introEl, { display: 'none' }, 0.8)
+        tl.set(introEl, { display: 'flex' }, '<-0.8') // restore on reverse
+      }
+
+      /* ── Phase 1–6: Cinematic zigzag camera movement ── */
+      tl.to(p, { x: -18, z: -8,  rotY: -0.12, duration: 1, ease: 'power1.inOut' }, 0.8)
         .to(p, { x:  20, z: -20, rotY:  0.12, duration: 1, ease: 'power1.inOut' })
         .to(p, { x: -15, z: -32, rotY: -0.10, duration: 1, ease: 'power1.inOut' })
         .to(p, { x:  18, z: -44, rotY:  0.11, duration: 1, ease: 'power1.inOut' })
@@ -76,9 +99,11 @@ export default function App() {
 
   return (
     <>
-      {/* ── Cinematic loader → intro sequence ── */}
-      <Loader onFinished={() => setLoaderDone(true)} />
-      {loaderDone && !introDone && <Intro onComplete={() => setIntroDone(true)} />}
+      {/* ── Cinematic loader — unlocks scroll when done ── */}
+      <Loader onFinished={() => {}} />
+
+      {/* ── Intro text — driven by scroll timeline ── */}
+      <Intro ref={introRef} />
 
       {/* Fixed full-screen canvas — always covers entire viewport */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
@@ -105,8 +130,8 @@ export default function App() {
           <CameraController proxy={proxy} />
         </Canvas>
 
-        {/* Overlay text on top of canvas — hidden during intro */}
-        {introDone && <Overlay />}
+        {/* Scroll hint */}
+        <Overlay />
       </div>
 
       {/* Scroll spacer — provides scroll height for ScrollTrigger */}

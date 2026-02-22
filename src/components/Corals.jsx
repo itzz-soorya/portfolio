@@ -583,11 +583,13 @@ function IntroShell() {
         </mesh>
       </group>
 
-      {/* ── Pearl (brightest object — reflective, no emissive) ── */}
+      {/* ── Glowing Pearl ── */}
       <mesh ref={pearlRef} position={[0, 0.1, 0.75]} castShadow>
         <sphereGeometry args={[0.28, 64, 64]} />
         <meshPhysicalMaterial
           color="#f0e8e0"
+          emissive="#b8d8f8"
+          emissiveIntensity={0.6}
           roughness={0.03}
           metalness={0.1}
           clearcoat={1.0}
@@ -602,6 +604,14 @@ function IntroShell() {
           specularColor={new THREE.Color('#ffffff')}
         />
       </mesh>
+      {/* Point light to cast glow from the pearl */}
+      <pointLight
+        position={[0, 0.15, 0.75]}
+        color="#c0e0ff"
+        intensity={2}
+        distance={3}
+        decay={2}
+      />
     </group>
   )
 }

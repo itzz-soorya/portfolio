@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 /* ── Sun-ray shaft config ── */
-const RAY_COUNT = 12
+const RAY_COUNT = 18
 const RAY_HEIGHT = 28
 const RAY_SPREAD_X = 30  // total horizontal spread
 const RAY_DEPTH = 40     // how far ahead/behind camera rays span
@@ -53,7 +53,7 @@ export default function SunRays() {
           // Gentle shimmer
           float shimmer = 0.85 + 0.15 * sin(uTime * 0.4 + vUv.y * 6.0);
 
-          float alpha = vFade * hFade * shimmer * uOpacity * 0.18;
+          float alpha = vFade * hFade * shimmer * uOpacity * 0.34;
 
           gl_FragColor = vec4(uColor, alpha);
         }

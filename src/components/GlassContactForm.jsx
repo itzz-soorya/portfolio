@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { SECTIONS } from '../config/SectionPositions'
 
@@ -17,7 +17,7 @@ export default function GlassContactForm({ activeSection, enabled }) {
 
   const isActive = enabled && activeSection === CONTACT_INDEX
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = formRef.current
     if (!el) return
 
@@ -27,7 +27,7 @@ export default function GlassContactForm({ activeSection, enabled }) {
     if (isActive) {
       gsap.killTweensOf(el)
       gsap.killTweensOf(el.children)
-      gsap.set(el, { display: 'flex' })
+      gsap.set(el, { display: 'flex', opacity: 0 })
 
       gsap.fromTo(el,
         { z: -500, x: sideX, scale: 0.6, opacity: 0, transformPerspective: 900 },
@@ -65,7 +65,7 @@ export default function GlassContactForm({ activeSection, enabled }) {
 
   // Contact is RIGHT side → text on left
   return (
-    <div ref={formRef} className="water-text" style={{ display: 'none', alignItems: 'center', textAlign: 'center' }}>
+    <div ref={formRef} className="water-text" style={{ display: 'none', opacity: 0, alignItems: 'center', textAlign: 'center' }}>
       <h2 className="water-title">Get In Touch</h2>
       <p className="water-desc">Have a project idea or want to connect? Drop a message below.</p>
 

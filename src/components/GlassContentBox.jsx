@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { SECTIONS } from '../config/SectionPositions'
 
@@ -19,7 +19,7 @@ export default function GlassContentBox({ activeSection, enabled }) {
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = containerRef.current
     if (!el) return
 
@@ -32,7 +32,7 @@ export default function GlassContentBox({ activeSection, enabled }) {
 
       gsap.killTweensOf(el)
       gsap.killTweensOf(el.children)
-      gsap.set(el, { display: 'flex' })
+      gsap.set(el, { display: 'flex', opacity: 0 })
 
       // Container: emerge from ocean depth on the corresponding side
       gsap.fromTo(el,
@@ -79,10 +79,10 @@ export default function GlassContentBox({ activeSection, enabled }) {
   const isActive = enabled && section && ACTIVE_IDS.includes(section.id)
   const data = isActive && content ? content[section.id] : null
 
-  if (!data) return <div ref={containerRef} className="water-text" style={{ display: 'none' }} />
+  if (!data) return <div ref={containerRef} className="water-text" style={{ display: 'none', opacity: 0 }} />
 
   return (
-    <div ref={containerRef} className="water-text" style={{ display: 'none', textAlign: 'center', alignItems: 'center' }}>
+    <div ref={containerRef} className="water-text" style={{ display: 'none', opacity: 0, textAlign: 'center', alignItems: 'center' }}>
       <h2 className="water-title">{data.title}</h2>
       <p className="water-desc">{data.description}</p>
       {data.list.map((item, i) => (

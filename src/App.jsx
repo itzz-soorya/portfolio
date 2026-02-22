@@ -1,8 +1,9 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Loader from './components/Loader'
 import Overlay from './components/Overlay'
 import OceanFloor from './components/OceanFloor'
 import UnderwaterLighting from './components/UnderwaterLighting'
@@ -39,6 +40,12 @@ function CameraController({ proxy }) {
 
 export default function App() {
   const proxy = useRef({ x: 0, y: 3.5, z: 0, rotY: 0 })
+  const [sceneReady, setSceneReady] = useState(false)
+
+  /* ── Lock scroll while loader is visible ── */
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+  }, [])
 
   useEffect(() => {
     const p = proxy.current
@@ -67,6 +74,9 @@ export default function App() {
 
   return (
     <>
+      {/* ── Cinematic loader ── */}
+      <Loader onFinished={() => setSceneReady(true)} />
+
       {/* Fixed full-screen canvas — always covers entire viewport */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <Canvas
@@ -79,6 +89,8 @@ export default function App() {
           }}
           onCreated={({ gl }) => {
             gl.toneMappingExposure = 1.1
+            // Give the GPU a couple of frames to render, then dismiss loader
+            setTimeout(() => window.__loaderDismiss?.(), 1800)
           }}
         >
           <color attach="background" args={['#062a3e']} />

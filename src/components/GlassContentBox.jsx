@@ -13,10 +13,17 @@ export default function GlassContentBox({ activeSection, enabled }) {
   const containerRef = useRef()
 
   useEffect(() => {
-    fetch('/data/portfolioContent.json')
+    fetch(`${import.meta.env.BASE_URL}data/portfolioContent.json`)
       .then(r => r.json())
-      .then(setContent)
-      .catch(() => {})
+      .then((data) => {
+        setContent(data)
+        // Signal loader: content JSON is ready
+        window.__loaderSignalContent?.()
+      })
+      .catch(() => {
+        // Even on error, signal so loader doesn't hang forever
+        window.__loaderSignalContent?.()
+      })
   }, [])
 
   useLayoutEffect(() => {

@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 export default function Loader({ onFinished }) {
   const [dots, setDots] = useState('')
   const [fadeOut, setFadeOut] = useState(false)
   const [hidden, setHidden] = useState(false)
+  const readyFlags = useRef({ document: false, scene: false, content: false })
+  const dismissed = useRef(false)
 
   /* ── animated dots ── */
   useEffect(() => {
@@ -13,22 +15,61 @@ export default function Loader({ onFinished }) {
     return () => clearInterval(id)
   }, [])
 
-  /* ── called once scene is ready ── */
-  const dismiss = useCallback(() => {
-    setFadeOut(true)
+  /* ── try to dismiss when all flags are true ── */
+  const tryDismiss = useCallback(() => {
+    const f = readyFlags.current
+    if (dismissed.current) return
+    if (!f.document || !f.scene || !f.content) return
+    dismissed.current = true
+
+    // Small extra delay to ensure paint is settled
     setTimeout(() => {
-      setHidden(true)
-      document.body.style.overflow = ''   // re-enable scroll
-      onFinished?.()
-    }, 1200) // matches CSS transition duration
+      setFadeOut(true)
+      setTimeout(() => {
+        setHidden(true)
+        document.body.style.overflow = ''
+        onFinished?.()
+      }, 1200)
+    }, 300)
   }, [onFinished])
 
-  /* expose dismiss so parent can call it */
+  /* ── Signal: document fully loaded (fonts, styles, images) ── */
   useEffect(() => {
-    // store on window so Canvas onCreated can trigger it after first render
-    window.__loaderDismiss = dismiss
-    return () => { delete window.__loaderDismiss }
-  }, [dismiss])
+    const markDocReady = () => {
+      readyFlags.current.document = true
+      tryDismiss()
+    }
+    if (document.readyState === 'complete') {
+      markDocReady()
+    } else {
+      window.addEventListener('load', markDocReady)
+      return () => window.removeEventListener('load', markDocReady)
+    }
+  }, [tryDismiss])
+
+  /* ── Expose signal functions so other components can report ready ── */
+  useEffect(() => {
+    window.__loaderSignalScene = () => {
+      readyFlags.current.scene = true
+      tryDismiss()
+    }
+    window.__loaderSignalContent = () => {
+      readyFlags.current.content = true
+      tryDismiss()
+    }
+    // Fallback: if everything takes too long, dismiss after 8s
+    const fallbackId = setTimeout(() => {
+      readyFlags.current.document = true
+      readyFlags.current.scene = true
+      readyFlags.current.content = true
+      tryDismiss()
+    }, 8000)
+    return () => {
+      clearTimeout(fallbackId)
+      delete window.__loaderSignalScene
+      delete window.__loaderSignalContent
+    }
+  }, [tryDismiss])
 
   if (hidden) return null
 

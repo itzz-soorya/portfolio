@@ -197,7 +197,8 @@ export default function App() {
           }}
           onCreated={({ gl }) => {
             gl.toneMappingExposure = 0.9
-            setTimeout(() => window.__loaderDismiss?.(), 1800)
+            // Signal loader: scene is ready after first frame renders
+            setTimeout(() => window.__loaderSignalScene?.(), 500)
           }}
         >
           <color attach="background" args={['#062a3e']} />

@@ -105,8 +105,8 @@ export default function App() {
           <CameraController proxy={proxy} />
         </Canvas>
 
-        {/* Overlay text on top of canvas */}
-        <Overlay />
+        {/* Overlay text on top of canvas — hidden during intro */}
+        {introDone && <Overlay />}
       </div>
 
       {/* Scroll spacer — provides scroll height for ScrollTrigger */}

@@ -8,6 +8,7 @@ import OceanFloor from './components/OceanFloor'
 import UnderwaterLighting from './components/UnderwaterLighting'
 import Corals from './components/Corals'
 import Bubbles from './components/Bubbles'
+import Particles from './components/Particles'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -85,6 +86,7 @@ export default function App() {
           <OceanFloor />
           <Corals />
           <Bubbles />
+          <Particles />
           <CameraController proxy={proxy} />
         </Canvas>
 

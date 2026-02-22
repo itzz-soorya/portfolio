@@ -21,7 +21,7 @@ class OceanFloorMaterial extends THREE.ShaderMaterial {
         uRoughnessMap: { value: null },
         uSunDirection: { value: new THREE.Vector3(0.2, 0.9, -0.3).normalize() },
         uSunColor: { value: new THREE.Color(0.6, 0.7, 0.85) },
-        uSunIntensity: { value: 1.6 },
+        uSunIntensity: { value: 1.3 },
         uAmbientColor: { value: new THREE.Color(0.12, 0.18, 0.28) },
         uFogColor: { value: new THREE.Color('#062a3e') },
         uFogNear: { value: 10.0 },
@@ -91,7 +91,7 @@ class OceanFloorMaterial extends THREE.ShaderMaterial {
           vec2 tiledUv = vWorldPosition.xz * 0.08;
 
           vec3 sandColor = texture2D(uColorMap, tiledUv).rgb;
-          sandColor *= 0.8;
+          sandColor *= 0.65;
 
           vec3 nDetail = texture2D(uNormalMap, tiledUv).rgb * 2.0 - 1.0;
           vec3 N = normalize(vWorldNormal + nDetail * 0.35);

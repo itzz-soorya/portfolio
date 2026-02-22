@@ -20,18 +20,17 @@ const Intro = forwardRef(function Intro(_, ref) {
         pointerEvents: 'none',
       }}
     >
-      {/* Soft glow orb — underwater light caustic */}
+      {/* Subtle underwater caustic halo */}
       <div
         className="intro-glow"
         style={{
           position: 'absolute',
-          width: 500,
-          height: 500,
+          width: 450,
+          height: 450,
           borderRadius: '50%',
           background:
-            'radial-gradient(circle, rgba(92,214,255,0.14) 0%, rgba(92,214,255,0.05) 30%, rgba(56,189,248,0.02) 55%, transparent 75%)',
+            'radial-gradient(circle, rgba(80,180,200,0.06) 0%, rgba(40,120,140,0.03) 40%, transparent 65%)',
           pointerEvents: 'none',
-          filter: 'blur(2px)',
         }}
       />
 
@@ -41,19 +40,14 @@ const Intro = forwardRef(function Intro(_, ref) {
         style={{
           fontFamily: "'Segoe UI', system-ui, sans-serif",
           fontSize: 'clamp(2.4rem, 6vw, 4.5rem)',
-          fontWeight: 200,
-          letterSpacing: '0.35em',
-          color: '#9FE7FF',
+          fontWeight: 500,
+          letterSpacing: '12px',
+          color: '#AEE9F5',
           textTransform: 'uppercase',
-          textShadow: [
-            '0 0 10px rgba(92,214,255,0.8)',
-            '0 0 30px rgba(92,214,255,0.5)',
-            '0 0 60px rgba(92,214,255,0.25)',
-            '0 0 100px rgba(56,189,248,0.12)',
-          ].join(', '),
+          textShadow:
+            '0 0 6px rgba(120,220,255,0.25), 0 0 12px rgba(120,220,255,0.15), 0 2px 8px rgba(0,0,0,0.4)',
           marginBottom: 28,
           willChange: 'transform, opacity',
-          animation: 'introLightReveal 2.5s ease-out forwards',
         }}
       >
         Soorya
@@ -67,11 +61,12 @@ const Intro = forwardRef(function Intro(_, ref) {
           fontSize: 'clamp(0.85rem, 1.8vw, 1.15rem)',
           fontWeight: 300,
           letterSpacing: '0.14em',
-          color: '#C8F6FF',
-          opacity: 0.85,
-          textShadow: '0 0 8px rgba(92,214,255,0.45), 0 0 20px rgba(92,214,255,0.15)',
+          color: 'rgba(210,240,255,0.75)',
+          textShadow: '0 1px 6px rgba(0,0,0,0.35)',
           marginBottom: 10,
-          background: 'linear-gradient(to bottom, rgba(4,44,58,0) 0%, rgba(4,44,58,0.3) 50%, rgba(4,44,58,0) 100%)',
+          background: 'rgba(20,40,50,0.35)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
           padding: '10px 24px',
           borderRadius: 8,
           willChange: 'transform, opacity',
@@ -88,10 +83,11 @@ const Intro = forwardRef(function Intro(_, ref) {
           fontSize: 'clamp(0.8rem, 1.6vw, 1.05rem)',
           fontWeight: 300,
           letterSpacing: '0.1em',
-          color: '#C8F6FF',
-          opacity: 0.85,
-          textShadow: '0 0 8px rgba(92,214,255,0.45), 0 0 20px rgba(92,214,255,0.15)',
-          background: 'linear-gradient(to bottom, rgba(4,44,58,0) 0%, rgba(4,44,58,0.3) 50%, rgba(4,44,58,0) 100%)',
+          color: 'rgba(210,240,255,0.75)',
+          textShadow: '0 1px 6px rgba(0,0,0,0.35)',
+          background: 'rgba(20,40,50,0.35)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
           padding: '10px 24px',
           borderRadius: 8,
           willChange: 'transform, opacity',
@@ -99,17 +95,6 @@ const Intro = forwardRef(function Intro(_, ref) {
       >
         Exploring the Depth of Backend Systems
       </p>
-
-      {/* Light-ray reveal keyframes */}
-      <style>{`
-        @keyframes introLightReveal {
-          0%   { opacity: 0.15; filter: brightness(0.3) blur(2px); }
-          30%  { opacity: 0.5;  filter: brightness(0.7) blur(1px); }
-          60%  { opacity: 0.85; filter: brightness(1.2) blur(0px); }
-          80%  { opacity: 1;    filter: brightness(1.4) blur(0px); }
-          100% { opacity: 1;    filter: brightness(1)   blur(0px); }
-        }
-      `}</style>
     </div>
   )
 })

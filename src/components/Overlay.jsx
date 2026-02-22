@@ -21,11 +21,10 @@ export default function Overlay() {
         style={{
           fontSize: '0.85rem',
           fontWeight: 300,
-          letterSpacing: '3px',
-          color: '#7FD8FF',
-          opacity: 0.7,
+          letterSpacing: '4px',
+          color: 'rgba(160,220,240,0.6)',
           textTransform: 'uppercase',
-          textShadow: '0 0 6px rgba(92,214,255,0.35)',
+          textShadow: '0 1px 4px rgba(0,0,0,0.3)',
           animation: 'overlayBounce 2.5s ease-in-out infinite',
         }}
       >

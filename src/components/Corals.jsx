@@ -11,29 +11,44 @@ function mulberry32(seed) {
   }
 }
 
-/* ──────────────────── natural marine colour palette ──────────────── */
+/* ──────────────────── muted deep-sea colour palette ──────────────── */
 const CORAL_PALETTES = [
-  // warm reds / pinks
-  { base: [0.55, 0.18, 0.15], accent: [0.7, 0.25, 0.2] },
-  { base: [0.65, 0.22, 0.25], accent: [0.8, 0.3, 0.3] },
-  // orange / peach
-  { base: [0.7, 0.35, 0.15], accent: [0.85, 0.45, 0.2] },
-  // purple / mauve
-  { base: [0.4, 0.2, 0.45], accent: [0.55, 0.3, 0.55] },
-  // soft yellow
-  { base: [0.65, 0.55, 0.2], accent: [0.8, 0.7, 0.3] },
-  // earthy brown / tan
-  { base: [0.45, 0.3, 0.2], accent: [0.6, 0.4, 0.25] },
-  // deep crimson
-  { base: [0.5, 0.12, 0.1], accent: [0.65, 0.18, 0.14] },
-  // olive green (algae-covered)
-  { base: [0.25, 0.35, 0.18], accent: [0.35, 0.45, 0.22] },
+  // deep sea green (algae-tinted)
+  { base: [0.18, 0.28, 0.22], accent: [0.22, 0.34, 0.26] },
+  // muted teal
+  { base: [0.2, 0.32, 0.34], accent: [0.25, 0.38, 0.4] },
+  // dark mauve (purple toned way down)
+  { base: [0.3, 0.2, 0.28], accent: [0.36, 0.24, 0.32] },
+  // dusty rose (soft pink, blue-absorbed)
+  { base: [0.38, 0.22, 0.22], accent: [0.42, 0.26, 0.25] },
+  // weathered brown
+  { base: [0.3, 0.24, 0.18], accent: [0.36, 0.28, 0.2] },
+  // deep olive
+  { base: [0.22, 0.26, 0.16], accent: [0.28, 0.32, 0.2] },
+  // slate blue-grey
+  { base: [0.22, 0.25, 0.3], accent: [0.26, 0.3, 0.36] },
+  // dark rust (red absorbed by water)
+  { base: [0.32, 0.18, 0.14], accent: [0.38, 0.22, 0.16] },
 ]
 
-/* ──────────────────── individual coral builders ──────────────────── */
+/* ──── helper: deform a geometry for organic feel ──── */
+function deformGeometry(geo, rng, amount = 0.06) {
+  const pos = geo.attributes.position
+  for (let i = 0; i < pos.count; i++) {
+    pos.setX(i, pos.getX(i) + (rng() - 0.5) * amount)
+    pos.setY(i, pos.getY(i) + (rng() - 0.5) * amount)
+    pos.setZ(i, pos.getZ(i) + (rng() - 0.5) * amount)
+  }
+  pos.needsUpdate = true
+  geo.computeVertexNormals()
+  return geo
+}
+
+/* ──────────────────── coral builders (organic forms) ──────────────────── */
 
 /**
- * Branching coral — tapered cylinder trunk + smaller branch cylinders.
+ * Branching coral — irregular trunk + asymmetric branches with sub-branches.
+ * Feels like real staghorn / elkhorn coral.
  */
 function BranchingCoral({ position, scale, colorIdx, rng }) {
   const pal = CORAL_PALETTES[colorIdx % CORAL_PALETTES.length]
@@ -43,82 +58,105 @@ function BranchingCoral({ position, scale, colorIdx, rng }) {
 
   const branches = useMemo(() => {
     const b = []
-    const count = 3 + Math.floor(rng() * 4)
+    const count = 4 + Math.floor(rng() * 4) // 4-7 branches
     for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2 + rng() * 0.5
-      const lean = 0.3 + rng() * 0.5
-      const h = 0.5 + rng() * 0.8
-      const r = 0.04 + rng() * 0.06
-      b.push({ angle, lean, h, r, subBranches: rng() > 0.5 })
+      const angle = (i / count) * Math.PI * 2 + (rng() - 0.5) * 0.8
+      const lean = 0.2 + rng() * 0.7
+      const h = 0.4 + rng() * 0.7
+      const rBot = 0.04 + rng() * 0.04
+      const rTop = rBot * (0.3 + rng() * 0.4)
+      const twist = (rng() - 0.5) * 0.6
+
+      // sub-branches for complexity
+      const subs = []
+      if (rng() > 0.3) {
+        const subCount = 1 + Math.floor(rng() * 2)
+        for (let s = 0; s < subCount; s++) {
+          subs.push({
+            yOff: 0.4 + rng() * 0.4,
+            lean: 0.3 + rng() * 0.5,
+            angle: rng() * Math.PI * 2,
+            h: 0.2 + rng() * 0.3,
+            r: rBot * (0.3 + rng() * 0.3),
+          })
+        }
+      }
+      b.push({ angle, lean, h, rBot, rTop, twist, subs })
     }
     return b
   }, [])
 
+  // Deformed trunk geometry
+  const trunkGeo = useMemo(() => {
+    const g = new THREE.CylinderGeometry(0.05, 0.1, 0.9, 7, 3)
+    return deformGeometry(g, rng, 0.03)
+  }, [])
+
   return (
     <group position={position} scale={scale} rotation={[0, rotY, 0]}>
+      {/* reef base — irregular rock */}
+      <mesh position={[0, -0.1, 0]} castShadow receiveShadow>
+        <dodecahedronGeometry args={[0.18, 0]} />
+        <meshStandardMaterial color={col} roughness={0.95} metalness={0.02} flatShading />
+      </mesh>
+
       {/* trunk */}
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[0.06, 0.12, 1.2, 8, 1]} />
-        <meshStandardMaterial color={col} roughness={0.85} metalness={0.05} />
+      <mesh geometry={trunkGeo} position={[0, 0.35, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={col} roughness={0.88} metalness={0.03} flatShading />
       </mesh>
 
       {/* branches */}
       {branches.map((br, i) => (
-        <group key={i} position={[0, 0.4 + i * 0.12, 0]} rotation={[br.lean, br.angle, 0]}>
+        <group key={i} position={[0, 0.3 + i * 0.08, 0]} rotation={[br.lean, br.angle, br.twist]}>
           <mesh castShadow receiveShadow>
-            <cylinderGeometry args={[br.r * 0.5, br.r, br.h, 6, 1]} />
-            <meshStandardMaterial color={acc} roughness={0.8} metalness={0.05} />
+            <cylinderGeometry args={[br.rTop, br.rBot, br.h, 5, 2]} />
+            <meshStandardMaterial color={acc} roughness={0.85} metalness={0.03} flatShading />
           </mesh>
-          {br.subBranches && (
-            <group position={[0, br.h * 0.75, 0]} rotation={[0.4, 1.2, 0]}>
+          {br.subs.map((s, si) => (
+            <group key={si} position={[0, br.h * s.yOff, 0]} rotation={[s.lean, s.angle, 0]}>
               <mesh castShadow receiveShadow>
-                <cylinderGeometry args={[br.r * 0.3, br.r * 0.5, br.h * 0.5, 5, 1]} />
-                <meshStandardMaterial color={acc} roughness={0.8} metalness={0.05} />
+                <cylinderGeometry args={[s.r * 0.4, s.r, s.h, 4, 1]} />
+                <meshStandardMaterial color={acc} roughness={0.85} metalness={0.03} flatShading />
               </mesh>
             </group>
-          )}
+          ))}
         </group>
       ))}
-
-      {/* soft shadow disc on floor */}
-      <mesh position={[0, -0.6, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[0.5, 16]} />
-        <meshStandardMaterial color="#0a0a0a" transparent opacity={0.18} depthWrite={false} />
-      </mesh>
     </group>
   )
 }
 
 /**
- * Brain coral — slightly flattened sphere with bumpy normals.
+ * Brain coral — organic blob with irregular surface, reef base.
  */
 function BrainCoral({ position, scale, colorIdx, rng }) {
   const pal = CORAL_PALETTES[colorIdx % CORAL_PALETTES.length]
   const col = new THREE.Color(...pal.base)
   const rotY = rng() * Math.PI * 2
+  const squash = 0.45 + rng() * 0.25
+
+  const blobGeo = useMemo(() => {
+    const g = new THREE.IcosahedronGeometry(0.45, 2)
+    return deformGeometry(g, rng, 0.08)
+  }, [])
 
   return (
     <group position={position} scale={scale} rotation={[0, rotY, 0]}>
-      <mesh castShadow receiveShadow scale={[1, 0.6, 1]}>
-        <dodecahedronGeometry args={[0.5, 2]} />
-        <meshStandardMaterial
-          color={col}
-          roughness={0.92}
-          metalness={0.02}
-          flatShading
-        />
+      {/* reef base */}
+      <mesh position={[0, -0.12, 0]} receiveShadow>
+        <dodecahedronGeometry args={[0.22, 0]} />
+        <meshStandardMaterial color={col} roughness={0.95} metalness={0.02} flatShading />
       </mesh>
-      {/* shadow disc */}
-      <mesh position={[0, -0.28, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[0.45, 16]} />
-        <meshStandardMaterial color="#0a0a0a" transparent opacity={0.15} depthWrite={false} />
+      {/* brain blob */}
+      <mesh geometry={blobGeo} position={[0, 0.15, 0]} castShadow receiveShadow scale={[1, squash, 1]}>
+        <meshStandardMaterial color={col} roughness={0.92} metalness={0.02} flatShading />
       </mesh>
     </group>
   )
 }
 
 /**
- * Tube coral — cluster of elongated cylinders
+ * Tube coral — irregular cluster of varying-height tubes from a rocky base.
  */
 function TubeCoral({ position, scale, colorIdx, rng }) {
   const pal = CORAL_PALETTES[colorIdx % CORAL_PALETTES.length]
@@ -128,13 +166,16 @@ function TubeCoral({ position, scale, colorIdx, rng }) {
 
   const tubes = useMemo(() => {
     const t = []
-    const count = 4 + Math.floor(rng() * 5)
+    const count = 5 + Math.floor(rng() * 5) // 5-9 tubes
     for (let i = 0; i < count; i++) {
+      const angle = rng() * Math.PI * 2
+      const dist = rng() * 0.18
       t.push({
-        x: (rng() - 0.5) * 0.3,
-        z: (rng() - 0.5) * 0.3,
-        h: 0.4 + rng() * 0.9,
-        r: 0.04 + rng() * 0.05,
+        x: Math.cos(angle) * dist,
+        z: Math.sin(angle) * dist,
+        h: 0.25 + rng() * 0.7,
+        rBot: 0.025 + rng() * 0.03,
+        lean: (rng() - 0.5) * 0.2, // slight lean
         useAccent: rng() > 0.5,
       })
     }
@@ -143,160 +184,181 @@ function TubeCoral({ position, scale, colorIdx, rng }) {
 
   return (
     <group position={position} scale={scale} rotation={[0, rotY, 0]}>
+      {/* rocky base */}
+      <mesh position={[0, -0.05, 0]} receiveShadow>
+        <dodecahedronGeometry args={[0.15, 0]} />
+        <meshStandardMaterial color={col} roughness={0.95} metalness={0.02} flatShading />
+      </mesh>
       {tubes.map((tb, i) => (
-        <mesh key={i} position={[tb.x, tb.h / 2, tb.z]} castShadow receiveShadow>
-          <cylinderGeometry args={[tb.r, tb.r * 1.15, tb.h, 7, 1]} />
+        <mesh key={i} position={[tb.x, tb.h / 2, tb.z]} rotation={[tb.lean, 0, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[tb.rBot * 0.7, tb.rBot, tb.h, 6, 1]} />
           <meshStandardMaterial
             color={tb.useAccent ? acc : col}
-            roughness={0.85}
-            metalness={0.04}
+            roughness={0.88}
+            metalness={0.03}
+            flatShading
           />
         </mesh>
       ))}
-      <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[0.35, 16]} />
-        <meshStandardMaterial color="#0a0a0a" transparent opacity={0.14} depthWrite={false} />
-      </mesh>
     </group>
   )
 }
 
 /**
- * Fan coral — thin flat disc standing upright, like a sea fan.
+ * Fan coral — organic sea fan on a stem with rocky base.
+ * Uses irregular ring geometry instead of perfect circle.
  */
 function FanCoral({ position, scale, colorIdx, rng }) {
   const pal = CORAL_PALETTES[colorIdx % CORAL_PALETTES.length]
   const col = new THREE.Color(...pal.base)
   const rotY = rng() * Math.PI * 2
-  const tilt = (rng() - 0.5) * 0.2
+  const tilt = (rng() - 0.5) * 0.15
+
+  const fanGeo = useMemo(() => {
+    const g = new THREE.CircleGeometry(0.5, 12)
+    return deformGeometry(g, rng, 0.08)
+  }, [])
 
   return (
     <group position={position} scale={scale} rotation={[0, rotY, tilt]}>
-      {/* fan body — a flat disc rotated to stand upright */}
-      <mesh position={[0, 0.5, 0]} rotation={[0, 0, 0]} castShadow receiveShadow>
-        <circleGeometry args={[0.6, 24]} />
-        <meshStandardMaterial
-          color={col}
-          roughness={0.8}
-          metalness={0.03}
-          side={THREE.DoubleSide}
-        />
+      {/* rocky base */}
+      <mesh position={[0, -0.05, 0]} receiveShadow>
+        <dodecahedronGeometry args={[0.12, 0]} />
+        <meshStandardMaterial color={col} roughness={0.95} metalness={0.02} flatShading />
       </mesh>
       {/* stem */}
-      <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.03, 0.05, 0.35, 6, 1]} />
-        <meshStandardMaterial color={col} roughness={0.9} metalness={0.05} />
+      <mesh position={[0, 0.12, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.02, 0.04, 0.25, 5, 1]} />
+        <meshStandardMaterial color={col} roughness={0.92} metalness={0.03} flatShading />
       </mesh>
-      {/* shadow */}
-      <mesh position={[0, -0.12, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[0.4, 16]} />
-        <meshStandardMaterial color="#0a0a0a" transparent opacity={0.12} depthWrite={false} />
+      {/* fan — standing upright, irregular edge */}
+      <mesh geometry={fanGeo} position={[0, 0.5, 0]} castShadow receiveShadow>
+        <meshStandardMaterial
+          color={col}
+          roughness={0.82}
+          metalness={0.03}
+          side={THREE.DoubleSide}
+          flatShading
+        />
       </mesh>
     </group>
   )
 }
 
 /**
- * Mushroom / table coral — wide flat disc on a short stump.
+ * Rock coral — irregular rock formation with encrusting coral patches.
+ * Replaces the cartoonish mushroom coral.
  */
-function MushroomCoral({ position, scale, colorIdx, rng }) {
+function RockCoral({ position, scale, colorIdx, rng }) {
   const pal = CORAL_PALETTES[colorIdx % CORAL_PALETTES.length]
   const col = new THREE.Color(...pal.base)
+  const acc = new THREE.Color(...pal.accent)
   const rotY = rng() * Math.PI * 2
+
+  const rockGeo = useMemo(() => {
+    const g = new THREE.DodecahedronGeometry(0.35, 1)
+    return deformGeometry(g, rng, 0.1)
+  }, [])
+
+  const patchCount = 2 + Math.floor(rng() * 3)
+  const patches = useMemo(() => {
+    const p = []
+    for (let i = 0; i < patchCount; i++) {
+      p.push({
+        x: (rng() - 0.5) * 0.3,
+        y: 0.1 + rng() * 0.25,
+        z: (rng() - 0.5) * 0.3,
+        s: 0.08 + rng() * 0.1,
+      })
+    }
+    return p
+  }, [])
 
   return (
     <group position={position} scale={scale} rotation={[0, rotY, 0]}>
-      {/* stump */}
-      <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.12, 0.18, 0.3, 8, 1]} />
-        <meshStandardMaterial color={col} roughness={0.88} metalness={0.04} />
+      {/* main rock */}
+      <mesh geometry={rockGeo} position={[0, 0.15, 0]} castShadow receiveShadow scale={[1, 0.7, 1]}>
+        <meshStandardMaterial color={col} roughness={0.95} metalness={0.02} flatShading />
       </mesh>
-      {/* cap — squished sphere */}
-      <mesh position={[0, 0.35, 0]} castShadow receiveShadow scale={[1, 0.3, 1]}>
-        <sphereGeometry args={[0.45, 16, 12]} />
-        <meshStandardMaterial color={col} roughness={0.85} metalness={0.03} flatShading />
-      </mesh>
-      {/* shadow */}
-      <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[0.4, 16]} />
-        <meshStandardMaterial color="#0a0a0a" transparent opacity={0.16} depthWrite={false} />
-      </mesh>
+      {/* encrusting coral patches */}
+      {patches.map((p, i) => (
+        <mesh key={i} position={[p.x, p.y, p.z]} receiveShadow>
+          <sphereGeometry args={[p.s, 6, 4]} />
+          <meshStandardMaterial color={acc} roughness={0.9} metalness={0.02} flatShading />
+        </mesh>
+      ))}
     </group>
   )
 }
 
 /* ─────────────── coral type registry ─────────────── */
-const CORAL_TYPES = [BranchingCoral, BrainCoral, TubeCoral, FanCoral, MushroomCoral]
+const CORAL_TYPES = [BranchingCoral, BrainCoral, TubeCoral, FanCoral, RockCoral]
 
 /* ───────────────── placement constants ───────────────── */
-const FLOOR_Y = -2             // sand floor Y
-const CENTER_CLEAR = 12        // min distance from center (keep path clear)
-const MAX_X = 45               // max distance from centre (visible within FOV)
-const Z_MIN = 20               // start slightly behind camera start (z=0)
-const Z_MAX = -80              // extends past camera endpoint (z=-60)
+const FLOOR_Y = -2
+const CENTER_CLEAR = 12
+const MAX_X = 45
+const Z_MIN = 20
+const Z_MAX = -80
 
-// Cluster definitions — each cluster is a focal point with a few corals around it
-const NUM_CLUSTERS = 14        // number of natural groupings
-const CORALS_PER_CLUSTER_MIN = 2
-const CORALS_PER_CLUSTER_MAX = 5
-const CLUSTER_RADIUS = 4       // how spread out corals are within a cluster
-const SOLO_CORALS = 8          // scattered lone corals between clusters
+// Cluster layout — natural reef groupings with open sand
+const NUM_CLUSTERS = 10          // fewer, more defined clusters
+const CORALS_PER_CLUSTER_MIN = 3
+const CORALS_PER_CLUSTER_MAX = 7
+const CLUSTER_RADIUS = 5         // wider spread within cluster
+const SOLO_CORALS = 5            // rare isolated pieces
 
 /**
- * Generate coral placements using natural cluster-based distribution.
- * - 14 clusters of 2–5 corals each, scattered along the full z range
- * - 8 additional solo corals for variety
- * - Wide open sand between clusters
- * - Occasional large coral (hero piece)
+ * Generate coral placements — reef-like clusters with wide gaps.
  */
 function generateAllCorals() {
   const rng = mulberry32(42)
   const corals = []
   const zRange = Z_MIN - Z_MAX
 
-  // ── Place clusters along the z axis with spacing ──
   for (let c = 0; c < NUM_CLUSTERS; c++) {
-    // Spread cluster centers evenly with jitter
     const baseFrac = (c + 0.5) / NUM_CLUSTERS
-    const jitter = (rng() - 0.5) * 0.6 / NUM_CLUSTERS
+    const jitter = (rng() - 0.5) * 0.7 / NUM_CLUSTERS
     const clusterZ = Z_MIN - (baseFrac + jitter) * zRange
 
-    // Cluster center x — on either side of the path
     const side = c % 2 === 0 ? 1 : -1
     const clusterX = side * (CENTER_CLEAR + rng() * (MAX_X - CENTER_CLEAR - CLUSTER_RADIUS))
 
-    // How many corals in this cluster
     const count = CORALS_PER_CLUSTER_MIN + Math.floor(rng() * (CORALS_PER_CLUSTER_MAX - CORALS_PER_CLUSTER_MIN + 1))
 
-    // One coral in the cluster can be a hero (larger)
+    // Pick a dominant type for the cluster (reefs have type grouping)
+    const dominantType = Math.floor(rng() * CORAL_TYPES.length)
+    const clusterPalette = Math.floor(rng() * CORAL_PALETTES.length)
     const heroIdx = Math.floor(rng() * count)
 
     for (let j = 0; j < count; j++) {
       const angle = rng() * Math.PI * 2
-      const dist = rng() * CLUSTER_RADIUS
+      const dist = rng() * CLUSTER_RADIUS * (0.3 + rng() * 0.7) // non-uniform spread
       const x = clusterX + Math.cos(angle) * dist
       const z = clusterZ + Math.sin(angle) * dist
 
-      const type = Math.floor(rng() * CORAL_TYPES.length)
-      const colorIdx = Math.floor(rng() * CORAL_PALETTES.length)
+      // 70% dominant type, 30% random — natural reef grouping
+      const type = rng() < 0.7 ? dominantType : Math.floor(rng() * CORAL_TYPES.length)
 
-      // Hero coral is 1.5–2.2x, others are 0.6–1.2x
+      // Slight palette variation within cluster
+      const colorIdx = rng() < 0.6 ? clusterPalette : Math.floor(rng() * CORAL_PALETTES.length)
+
       const s = j === heroIdx
-        ? 1.5 + rng() * 0.7
-        : 0.6 + rng() * 0.6
+        ? 1.4 + rng() * 0.8    // hero: 1.4–2.2
+        : 0.5 + rng() * 0.6    // standard: 0.5–1.1
 
       corals.push({ x, z, type, colorIdx, s, seed: Math.floor(rng() * 99999) })
     }
   }
 
-  // ── Scattered solo corals for natural variety ──
+  // Sparse solo corals
   for (let i = 0; i < SOLO_CORALS; i++) {
     const side = rng() > 0.5 ? 1 : -1
     const x = side * (CENTER_CLEAR + rng() * (MAX_X - CENTER_CLEAR))
     const z = Z_MIN - rng() * zRange
     const type = Math.floor(rng() * CORAL_TYPES.length)
     const colorIdx = Math.floor(rng() * CORAL_PALETTES.length)
-    const s = 0.5 + rng() * 0.5   // solo corals are small
+    const s = 0.4 + rng() * 0.4
 
     corals.push({ x, z, type, colorIdx, s, seed: Math.floor(rng() * 99999) })
   }
@@ -304,10 +366,6 @@ function generateAllCorals() {
   return corals
 }
 
-/**
- * Corals — placed on both sides of the sand road across the full plane.
- * No leapfrog needed since the plane is one big static surface.
- */
 export default function Corals() {
   const corals = useMemo(() => generateAllCorals(), [])
 

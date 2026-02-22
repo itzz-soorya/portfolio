@@ -229,55 +229,18 @@ html, body {
   text-shadow: 0 0 10px rgba(80, 180, 220, 0.15);
 }
 
-/* ─── Mobile Portrait Orientation Overlay ─── */
-#rotate-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: radial-gradient(ellipse at center, #0a354a 0%, #021a25 100%);
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  color: #bfefff;
-  font-family: system-ui, -apple-system, sans-serif;
-  text-align: center;
-  padding: 32px;
-}
-
-#rotate-overlay .rotate-icon {
-  width: 80px;
-  height: 80px;
-  opacity: 0.7;
-  animation: rotateHint 2s ease-in-out infinite;
-}
-
-#rotate-overlay h2 {
-  font-size: 1.3rem;
-  font-weight: 300;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: rgba(191, 239, 255, 0.9);
-}
-
-#rotate-overlay p {
-  font-size: 0.85rem;
-  font-weight: 200;
-  color: rgba(191, 239, 255, 0.5);
-  letter-spacing: 1.5px;
-  max-width: 280px;
-}
-
-@keyframes rotateHint {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(90deg); }
-}
-
-/* Show overlay only on mobile touch devices in portrait */
+/* ─── Force landscape on mobile portrait ─── */
 @media screen and (max-width: 930px) and (orientation: portrait) and (hover: none) and (pointer: coarse) {
-  #rotate-overlay {
-    display: flex;
+  html {
+    /* Rotate the entire page 90° to simulate landscape */
+    transform: rotate(-90deg);
+    transform-origin: left top;
+    width: 100vh;
+    height: 100vw;
+    overflow-x: hidden;
+    position: absolute;
+    top: 100%;
+    left: 0;
   }
 }
 

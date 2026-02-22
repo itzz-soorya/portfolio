@@ -21,27 +21,33 @@ export default function GlassContactForm({ activeSection, enabled }) {
     const el = formRef.current
     if (!el) return
 
+    // Contact is on the RIGHT side (x:6), so emerge from right depth
+    const sideX = 60
+
     if (isActive) {
       gsap.killTweensOf(el)
       gsap.killTweensOf(el.children)
       gsap.set(el, { display: 'flex' })
 
       gsap.fromTo(el,
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.0, delay: 0.6, ease: 'power2.out' }
+        { z: -500, x: sideX, scale: 0.6, opacity: 0, transformPerspective: 900 },
+        { z: 0, x: 0, scale: 1, opacity: 1, transformPerspective: 900, duration: 1.3, delay: 0.6, ease: 'power2.out' }
       )
 
       const children = el.querySelectorAll('.water-title, .water-desc, .water-input, .water-submit, .water-form-success')
       gsap.fromTo(children,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, delay: 0.8, stagger: 0.08, ease: 'power2.out' }
+        { z: -200, x: sideX * 0.3, opacity: 0, transformPerspective: 900 },
+        { z: 0, x: 0, opacity: 1, transformPerspective: 900, duration: 0.9, delay: 0.85, stagger: 0.09, ease: 'power2.out' }
       )
     } else {
       gsap.killTweensOf(el)
       gsap.to(el, {
-        y: 25,
+        z: -300,
+        x: 40,
+        scale: 0.75,
         opacity: 0,
-        duration: 0.4,
+        transformPerspective: 900,
+        duration: 0.5,
         ease: 'power2.in',
         onComplete: () => { el.style.display = 'none' },
       })

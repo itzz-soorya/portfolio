@@ -94,6 +94,7 @@ html, body {
   padding: 80px 10%;
   pointer-events: none;
   will-change: transform, opacity;
+  transform-style: preserve-3d;
 }
 
 .water-title {

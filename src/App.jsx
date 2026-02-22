@@ -11,6 +11,7 @@ import Corals from './components/Corals'
 import MarineAssets from './components/MarineAssets'
 import Bubbles from './components/Bubbles'
 import Particles from './components/Particles'
+import SunRays from './components/SunRays'
 import CameraRig from './components/CameraRig'
 import SectionActivationController from './components/SectionActivationController'
 import GlassContentBox from './components/GlassContentBox'
@@ -166,6 +167,7 @@ export default function App() {
           <MarineAssets />
           <Bubbles />
           <Particles />
+          <SunRays />
           <SectionActivationController activeSection={activeSection} enabled={headerVisible} />
           <CameraRig activeSection={activeSection} />
         </Canvas>

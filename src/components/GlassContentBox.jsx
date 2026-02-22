@@ -28,37 +28,47 @@ export default function GlassContentBox({ activeSection, enabled }) {
 
     if (isActive && content && content[section.id]) {
       const isLeft = section.position.x < 0
+      const sideX = isLeft ? -60 : 60
 
       gsap.killTweensOf(el)
       gsap.killTweensOf(el.children)
       gsap.set(el, { display: 'flex' })
 
-      // Container: float up into view
+      // Container: emerge from ocean depth on the corresponding side
       gsap.fromTo(el,
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.0, delay: 0.6, ease: 'power2.out' }
+        { z: -500, x: sideX, scale: 0.6, opacity: 0, transformPerspective: 900 },
+        { z: 0, x: 0, scale: 1, opacity: 1, transformPerspective: 900, duration: 1.3, delay: 0.6, ease: 'power2.out' }
       )
 
-      // Stagger children: title → desc → each list item
+      // Stagger children: each emerges from depth with slight offset
       const children = el.querySelectorAll('.water-title, .water-desc, .water-item')
       gsap.fromTo(children,
-        { y: 20, opacity: 0 },
+        { z: -200, x: sideX * 0.3, opacity: 0, transformPerspective: 900 },
         {
-          y: 0,
+          z: 0,
+          x: 0,
           opacity: 1,
-          duration: 0.7,
-          delay: 0.8,
-          stagger: 0.08,
+          transformPerspective: 900,
+          duration: 0.9,
+          delay: 0.85,
+          stagger: 0.09,
           ease: 'power2.out',
         }
       )
     } else {
+      const prevSection = SECTIONS[activeSection]
+      const wasLeft = prevSection ? prevSection.position.x < 0 : true
+      const exitX = wasLeft ? -40 : 40
+
       gsap.killTweensOf(el)
       gsap.killTweensOf(el.children)
       gsap.to(el, {
-        y: 25,
+        z: -300,
+        x: exitX,
+        scale: 0.75,
         opacity: 0,
-        duration: 0.4,
+        transformPerspective: 900,
+        duration: 0.5,
         ease: 'power2.in',
         onComplete: () => { el.style.display = 'none' },
       })

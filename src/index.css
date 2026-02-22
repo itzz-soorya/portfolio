@@ -11,6 +11,7 @@
 
 html, body {
   width: 100%;
+  height: 100%;
   overflow: hidden;
   background-color: #042c3a;
   color: #bfefff;
@@ -19,6 +20,7 @@ html, body {
 
 #root {
   width: 100%;
+  height: 100%;
 }
 
 /* ─── Header Navigation ─── */
@@ -227,20 +229,5 @@ html, body {
   letter-spacing: 2px;
   color: rgba(180, 225, 240, 0.6);
   text-shadow: 0 0 10px rgba(80, 180, 220, 0.15);
-}
-
-/* ─── Force landscape on mobile portrait ─── */
-@media screen and (max-width: 930px) and (orientation: portrait) and (hover: none) and (pointer: coarse) {
-  html {
-    /* Rotate the entire page 90° to simulate landscape */
-    transform: rotate(-90deg);
-    transform-origin: left top;
-    width: 100vh;
-    height: 100vw;
-    overflow-x: hidden;
-    position: absolute;
-    top: 100%;
-    left: 0;
-  }
 }
 

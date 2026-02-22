@@ -18,6 +18,30 @@ import GlassContentBox from './components/GlassContentBox'
 import GlassContactForm from './components/GlassContactForm'
 import { SECTIONS } from './config/SectionPositions'
 
+/* ── Detect portrait mobile and provide wrapper style ── */
+function usePortraitMobile() {
+  const [isPortrait, setIsPortrait] = useState(() => {
+    return window.innerWidth < 768 && window.innerHeight > window.innerWidth
+  })
+
+  useEffect(() => {
+    const check = () => {
+      const isSmall = window.innerWidth < 768
+      const isPort = window.innerHeight > window.innerWidth
+      setIsPortrait(isSmall && isPort)
+    }
+    check()
+    window.addEventListener('resize', check)
+    window.addEventListener('orientationchange', () => setTimeout(check, 200))
+    return () => {
+      window.removeEventListener('resize', check)
+      window.removeEventListener('orientationchange', check)
+    }
+  }, [])
+
+  return isPortrait
+}
+
 export default function App() {
   const [activeSection, setActiveSection] = useState(0)
   const [headerVisible, setHeaderVisible] = useState(false)
@@ -25,6 +49,7 @@ export default function App() {
   const scrollReady = useRef(false)        // block scroll until intro done
   const isAnimating = useRef(false)        // debounce rapid scrolls
   const touchStartY = useRef(0)            // for mobile swipe
+  const isPortraitMobile = usePortraitMobile()
 
   /* ── After loader fades: auto-animate intro, then reveal header ── */
   const handleLoaderDone = useCallback(() => {
@@ -123,8 +148,22 @@ export default function App() {
     }
   }, [])
 
+  // Wrapper style: rotates the entire app into landscape on portrait mobile
+  const wrapperStyle = isPortraitMobile
+    ? {
+        position: 'fixed',
+        width: window.innerHeight,
+        height: window.innerWidth,
+        transform: 'rotate(-90deg) translateX(-100%)',
+        transformOrigin: 'top left',
+        overflow: 'hidden',
+        top: 0,
+        left: 0,
+      }
+    : { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflow: 'hidden' }
+
   return (
-    <>
+    <div style={wrapperStyle}>
       {/* ── Cinematic loader ── */}
       <Loader onFinished={handleLoaderDone} />
 
@@ -145,10 +184,12 @@ export default function App() {
       <GlassContactForm activeSection={activeSection} enabled={headerVisible} />
 
       {/* Fixed full-screen canvas */}
-      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <Canvas
+          dpr={[1, 2]}
           camera={{ position: [-6, 2, 0], fov: 60, near: 0.1, far: 200 }}
           shadows
+          style={{ width: '100%', height: '100%' }}
           gl={{
             antialias: true,
             alpha: false,
@@ -156,7 +197,6 @@ export default function App() {
           }}
           onCreated={({ gl }) => {
             gl.toneMappingExposure = 0.9
-            gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
             setTimeout(() => window.__loaderDismiss?.(), 1800)
           }}
         >
@@ -172,6 +212,6 @@ export default function App() {
           <CameraRig activeSection={activeSection} />
         </Canvas>
       </div>
-    </>
+    </div>
   )
 }

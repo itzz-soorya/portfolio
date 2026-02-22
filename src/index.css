@@ -274,8 +274,8 @@ html, body {
   50% { transform: rotate(90deg); }
 }
 
-/* Show overlay only on small portrait screens (mobile) */
-@media screen and (max-width: 930px) and (orientation: portrait) {
+/* Show overlay only on mobile touch devices in portrait */
+@media screen and (max-width: 930px) and (orientation: portrait) and (hover: none) and (pointer: coarse) {
   #rotate-overlay {
     display: flex;
   }
